@@ -4,6 +4,7 @@ import Register from "../pages/Auth/Register.tsx";
 import Login from "../pages/Auth/Login.tsx";
 import CompleteProfil from "../pages/Auth/CompleteProfil.tsx";
 import DashboardPage from "../pages/DashBoard/DashboardPage.tsx";
+import FoldersPage from "../pages/Folder/Folder.tsx";
 
 const AppRoutes: React.FC = () => {
     return (
@@ -14,6 +15,7 @@ const AppRoutes: React.FC = () => {
                 <Route path="/completeProfil" element={<CompleteProfil />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/Folder" element={<FoldersPage />} />
             </Routes>
         </Router>
     );

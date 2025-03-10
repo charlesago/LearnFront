@@ -5,6 +5,7 @@ import "../style/sidebar.css";
 const Sidebar: React.FC = () => {
     const [isOpen, setIsOpen] = useState(true);
     const [user, setUser] = useState({ first_name: "", last_name: "", avatar: "" });
+    const [folders, setFolders] = useState<string[]>([]);
     const [activeMenu, setActiveMenu] = useState("");
 
     const navigate = useNavigate();
@@ -26,25 +27,35 @@ const Sidebar: React.FC = () => {
                     });
                 })
                 .catch(err => console.error("Erreur lors de la récupération du profil :", err));
+
+            fetch("https://learnia.charlesagostinelli.com/api/folders/", {
+                headers: { "Authorization": `Bearer ${token}` },
+            })
+                .then(res => res.json())
+                .then(data => {
+                    setFolders(data.map((folder: any) => folder.name));
+                })
+                .catch(err => console.error("Erreur lors de la récupération des dossiers :", err));
         }
     }, [navigate]);
 
     const handleMenuClick = (menu: string) => {
         setActiveMenu(menu);
+        if (menu === "folders") {
+            navigate("/folders");
+        }
     };
 
     return (
         <div className={`sidebar ${isOpen ? "open" : "closed"}`}>
-            {/* Sidebar Header */}
             <div className="sidebar-header">
                 <img src="/assets/LearniaLogo.png" alt="LearnIA Logo" className="logo" />
-                <p>LearnAI</p>
+                <a href={"/dashboard"}>LearnAI</a>
                 <button className="toggle-btn" onClick={() => setIsOpen(!isOpen)}>
                     {isOpen ? "✕" : "☰"}
                 </button>
             </div>
 
-            {/* Menu */}
             <ul className="menu">
                 <li
                     className={activeMenu === "blog" ? "active" : ""}
@@ -64,13 +75,13 @@ const Sidebar: React.FC = () => {
                 </li>
                 <li
                     className={activeMenu === "folders" ? "active" : ""}
-                    onClick={() => handleMenuClick("folders")}
+                    onClick={() => handleMenuClick("folder")}
                 >
-                     <span>Mes Dossiers ▼</span>
+                     <a href="/folder">Mes Dossiers ▼</a>
                     <ul className="submenu">
-                        <li>Science</li>
-                        <li>Physique</li>
-                        <li>Math</li>
+                        {folders.map((folder, index) => (
+                            <li key={index}>{folder}</li>
+                        ))}
                     </ul>
                 </li>
                 <li
@@ -81,7 +92,6 @@ const Sidebar: React.FC = () => {
                 </li>
             </ul>
 
-            {/* Sidebar Footer */}
             <div className="sidebar-footer">
                 <img src={user.avatar} alt="Avatar" className="avatar" />
                 {isOpen && <p>{user.first_name} {user.last_name}</p>}

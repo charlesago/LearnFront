@@ -1,4 +1,3 @@
-/* General Reset */
 * {
     margin: 0;
     padding: 0;
@@ -6,14 +5,12 @@
     font-family: 'Segoe UI', sans-serif;
 }
 
-/* Dashboard Container */
 .dashboard-container {
     display: flex;
     height: 100vh;
     background: #f5f7fa;
 }
 
-/* Dashboard Main Content */
 .dashboard {
     margin-left: 250px;
     flex-grow: 1;
@@ -23,7 +20,6 @@
     box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
 }
 
-/* Recording Section */
 .recording {
     display: flex;
     flex-direction: column;
@@ -63,7 +59,6 @@
     font-weight: 500;
 }
 
-/* Folders Section */
 .folders {
     margin-top: 40px;
     width: 100%;
@@ -104,14 +99,12 @@
     background: #ffffff;
 }
 
-/* Loading State */
 .loading {
     font-size: 16px;
     color: #777;
     font-style: italic;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
     .dashboard {
         margin-left: 0;
