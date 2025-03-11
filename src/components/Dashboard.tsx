@@ -20,11 +20,13 @@ const Dashboard: React.FC = () => {
                 .catch(err => {
                     console.error("Erreur lors de la récupération des dossiers :", err);
                     setIsLoading(false);
+
                 });
         }
     }, []);
 
     return (
+
         <div className="dashboard">
             <div className="recording">
                 <div className="mic" onClick={() => alert("Enregistrement démarré!")}>🎤</div>

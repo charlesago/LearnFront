@@ -1,0 +1,41 @@
+.file-editor {
+    flex-grow: 1;
+    padding: 40px;
+}
+
+.file-editor h1 {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.file-content {
+    width: 100%;
+    height: 400px;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    font-family: monospace;
+}
+
+.save-button {
+    margin-top: 20px;
+    padding: 12px 24px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.3s ease;
+}
+
+.save-button:hover {
+    background: #66BB6A;
+}
+
+.error-message {
+    color: red;
+    font-weight: bold;
+}

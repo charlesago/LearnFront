@@ -13,7 +13,7 @@ const Login: React.FC = () => {
         e.preventDefault();
         setLoading(true);
         setError("");
-
+    
         try {
             const response = await fetch("https://learnia.charlesagostinelli.com/api/login/", {
                 method: "POST",
@@ -22,18 +22,21 @@ const Login: React.FC = () => {
                 },
                 body: JSON.stringify({ email, password }),
             });
-
+    
             const data = await response.json();
-
+    
             if (!response.ok) {
                 throw new Error(data.message || "Erreur lors de la connexion");
             }
-
+    
+            // Stockez le token dans le localStorage
+            localStorage.setItem("token", data.token);
+    
             alert("Connexion réussie !");
             navigate("/dashboard");
-
-        } catch (err: any) {
-            setError(err.message);
+    
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Une erreur est survenue");
         } finally {
             setLoading(false);
         }

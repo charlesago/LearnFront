@@ -9,7 +9,29 @@ const Sidebar: React.FC = () => {
     const [activeMenu, setActiveMenu] = useState("");
 
     const navigate = useNavigate();
+    const handleLogout = async () => {
+        const token = localStorage.getItem("token");
+        if (token) {
+            try {
+                const response = await fetch("https://learnia.charlesagostinelli.com/api/logout/", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${token}`,
+                        "Content-Type": "application/json"
+                    },
+                });
 
+                if (response.ok) {
+                    localStorage.removeItem("token");
+                    navigate("/login");
+                } else {
+                    console.error("Erreur lors de la déconnexion");
+                }
+            } catch (error) {
+                console.error("Erreur lors de la déconnexion:", error);
+            }
+        }
+    };
     useEffect(() => {
         const token = localStorage.getItem("token");
         if (!token) {
@@ -34,6 +56,7 @@ const Sidebar: React.FC = () => {
                 .then(res => res.json())
                 .then(data => {
                     setFolders(data.map((folder: any) => folder.name));
+
                 })
                 .catch(err => console.error("Erreur lors de la récupération des dossiers :", err));
         }
@@ -80,7 +103,7 @@ const Sidebar: React.FC = () => {
                      <a href="/folder">Mes Dossiers ▼</a>
                     <ul className="submenu">
                         {folders.map((folder, index) => (
-                            <li key={index}>{folder}</li>
+                            <li key={index} onClick={() => navigate(`/folder/${folder.id}`)}>{folder}</li>
                         ))}
                     </ul>
                 </li>
@@ -89,8 +112,14 @@ const Sidebar: React.FC = () => {
                     onClick={() => handleMenuClick("settings")}
                 >
                     <span>Paramètres</span>
+                </li>  <br/><br/>
+                <li onClick={handleLogout}>
+                    <span>Déconnexion</span>
                 </li>
             </ul>
+
+
+
 
             <div className="sidebar-footer">
                 <img src={user.avatar} alt="Avatar" className="avatar" />
