@@ -5,9 +5,10 @@ import "./file.css";
 
 const FilesPage: React.FC = () => {
     const { folderId } = useParams<{ folderId: string }>();
-    const [files, setFiles] = useState<{ name: string }[]>([]);
+    const [files, setFiles] = useState<{ name: string, id: number }[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newFileName, setNewFileName] = useState("");
+    const [selectedFileId, setSelectedFileId] = useState<number | null>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -23,7 +24,7 @@ const FilesPage: React.FC = () => {
                         id: file.id
                     })));
                 })
-                .catch(err => console.error("Erreur lor s de la récupération des fichiers :", err));
+                .catch(err => console.error("Erreur lors de la récupération des fichiers :", err));
         }
     }, [folderId]);
 
@@ -40,7 +41,7 @@ const FilesPage: React.FC = () => {
                     body: JSON.stringify({ file_name: newFileName }),
                 });
                 if (response.ok) {
-                    setFiles([...files, { name: newFileName }]);
+                    setFiles([...files, { name: newFileName, id: Date.now() }]);
                     setIsModalOpen(false);
                     setNewFileName("");
                 } else {
@@ -52,16 +53,38 @@ const FilesPage: React.FC = () => {
         }
     };
 
+    const handleDeleteFile = async (fileId: number) => {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        try {
+            await fetch(`https://learnia.charlesagostinelli.com/api/files/${fileId}/delete/`, {
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${token}` },
+            });
+
+            setFiles(files.filter(file => file.id !== fileId));
+            setSelectedFileId(null);
+        } catch (error) {
+            console.error("Erreur lors de la suppression du fichier :", error);
+        }
+    };
+
     return (
         <div className="dashboard-container">
             <Sidebar />
             <div className="files-page">
                 <h1>Fichiers du dossier</h1>
                 <div className="file-list">
-                    {files.map((file, index) => (
-                        <div key={index} className="file-card" onClick={() => navigate(`/file/${file.id}`)}>
-                            <h2>{file.name}</h2>
-                            <button className="file-options">⋮</button>
+                    {files.map((file) => (
+                        <div key={file.id} className="file-card">
+                            <div onClick={() => navigate(`/file/${file.id}`)}>{file.name}</div>
+                            <button className="file-options" onClick={() => setSelectedFileId(file.id)}>⋮</button>
+                            {selectedFileId === file.id && (
+                                <div className="context-menu">
+                                    <button onClick={() => handleDeleteFile(file.id)}>Supprimer</button>
+                                </div>
+                            )}
                         </div>
                     ))}
                 </div>

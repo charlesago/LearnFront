@@ -5,10 +5,11 @@ import "../style/sidebar.css";
 const Sidebar: React.FC = () => {
     const [isOpen, setIsOpen] = useState(true);
     const [user, setUser] = useState({ first_name: "", last_name: "", avatar: "" });
-    const [folders, setFolders] = useState<string[]>([]);
+    const [folders, setFolders] = useState<{ id: number, name: string }[]>([]);
     const [activeMenu, setActiveMenu] = useState("");
 
     const navigate = useNavigate();
+
     const handleLogout = async () => {
         const token = localStorage.getItem("token");
         if (token) {
@@ -32,6 +33,7 @@ const Sidebar: React.FC = () => {
             }
         }
     };
+
     useEffect(() => {
         const token = localStorage.getItem("token");
         if (!token) {
@@ -55,8 +57,7 @@ const Sidebar: React.FC = () => {
             })
                 .then(res => res.json())
                 .then(data => {
-                    setFolders(data.map((folder: any) => folder.name));
-
+                    setFolders(data.map((folder: any) => ({ id: folder.id, name: folder.name })));
                 })
                 .catch(err => console.error("Erreur lors de la récupération des dossiers :", err));
         }
@@ -65,8 +66,13 @@ const Sidebar: React.FC = () => {
     const handleMenuClick = (menu: string) => {
         setActiveMenu(menu);
         if (menu === "folders") {
-            navigate("/folders");
+            navigate("/folder");
         }
+    };
+
+    const handleFolderClick = (event: React.MouseEvent, folderId: number) => {
+        event.stopPropagation(); // Empêche la propagation de l'événement de clic
+        navigate(`/folder/${folderId}`);
     };
 
     return (
@@ -90,7 +96,7 @@ const Sidebar: React.FC = () => {
                     className={activeMenu === "listen" ? "active" : ""}
                     onClick={() => handleMenuClick("listen")}
                 >
-                     <span>Écoute ▼</span>
+                    <span>Écoute ▼</span>
                     <ul className="submenu">
                         <li>Enregistrement</li>
                         <li>Téléverser</li>
@@ -98,12 +104,12 @@ const Sidebar: React.FC = () => {
                 </li>
                 <li
                     className={activeMenu === "folders" ? "active" : ""}
-                    onClick={() => handleMenuClick("folder")}
+                    onClick={() => handleMenuClick("folders")}
                 >
-                     <a href="/folder">Mes Dossiers ▼</a>
+                    <span>Mes Dossiers ▼</span>
                     <ul className="submenu">
-                        {folders.map((folder, index) => (
-                            <li key={index} onClick={() => navigate(`/folder/${folder.id}`)}>{folder}</li>
+                        {folders.map((folder) => (
+                            <li key={folder.id} onClick={(event) => handleFolderClick(event, folder.id)}>{folder.name}</li>
                         ))}
                     </ul>
                 </li>
@@ -112,14 +118,12 @@ const Sidebar: React.FC = () => {
                     onClick={() => handleMenuClick("settings")}
                 >
                     <span>Paramètres</span>
-                </li>  <br/><br/>
+                </li>
+                <br /><br />
                 <li onClick={handleLogout}>
                     <span>Déconnexion</span>
                 </li>
             </ul>
-
-
-
 
             <div className="sidebar-footer">
                 <img src={user.avatar} alt="Avatar" className="avatar" />

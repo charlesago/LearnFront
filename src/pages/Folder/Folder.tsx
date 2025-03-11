@@ -4,9 +4,10 @@ import Sidebar from "../../components/Sidebar";
 import "./folder.css";
 
 const FoldersPage: React.FC = () => {
-    const [folders, setFolders] = useState<{ name: string, notes: number }[]>([]);
+    const [folders, setFolders] = useState<{ id: number, name: string, notes: number }[]>([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newFolderName, setNewFolderName] = useState("");
+    const [selectedFolderId, setSelectedFolderId] = useState<number | null>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -16,13 +17,11 @@ const FoldersPage: React.FC = () => {
                 headers: { "Authorization": `Bearer ${token}` },
             })
                 .then(res => res.json())
-                .then(data => {
-                    setFolders(data.map((folder: any) => ({
-                        name: folder.name,
-                        id: folder.id,
-                        notes: folder.notes_count
-                    })));
-                })
+                .then(data => setFolders(data.map((folder: any) => ({
+                    id: folder.id,
+                    name: folder.name,
+                    notes: folder.notes_count
+                }))))
                 .catch(err => console.error("Erreur lors de la récupération des dossiers :", err));
         }
     }, []);
@@ -40,7 +39,7 @@ const FoldersPage: React.FC = () => {
                     body: JSON.stringify({ folder_name: newFolderName }),
                 });
                 if (response.ok) {
-                    setFolders([...folders, { name: newFolderName, notes: 0 }]);
+                    setFolders([...folders, { id: Date.now(), name: newFolderName, notes: 0 }]);
                     setIsModalOpen(false);
                     setNewFolderName("");
                 } else {
@@ -52,19 +51,41 @@ const FoldersPage: React.FC = () => {
         }
     };
 
+    const handleDeleteFolder = async (folderId: number) => {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        try {
+            await fetch(`https://learnia.charlesagostinelli.com/api/folders/${folderId}/`, {
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${token}` },
+            });
+
+            setFolders(folders.filter(folder => folder.id !== folderId));
+            setSelectedFolderId(null);
+        } catch (error) {
+            console.error("Erreur lors de la suppression du dossier :", error);
+        }
+    };
+
     return (
         <div className="dashboard-container">
             <Sidebar />
             <div className="folders-page">
                 <h1>Mes Dossiers</h1>
                 <div className="folder-list">
-                    {folders.map((folder, index) => (
-                        <div key={index} className="folder-card" onClick={() => navigate(`/folder/${folder.id}`)}>
-                            <div className="folder-name">
+                    {folders.map((folder) => (
+                        <div key={folder.id} className="folder-card">
+                            <div className="folder-name" onClick={() => navigate(`/folder/${folder.id}`)}>
                                 <h2>{folder.name}</h2>
                                 <p>{folder.notes} Notes</p>
                             </div>
-                            <button className="folder-options">⋮</button>
+                            <button className="folder-options" onClick={() => setSelectedFolderId(folder.id)}>⋮</button>
+                            {selectedFolderId === folder.id && (
+                                <div className="context-menu">
+                                    <button onClick={() => handleDeleteFolder(folder.id)}>Supprimer</button>
+                                </div>
+                            )}
                         </div>
                     ))}
                 </div>

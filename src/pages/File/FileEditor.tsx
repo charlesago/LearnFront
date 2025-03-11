@@ -8,6 +8,8 @@ const FileEditor: React.FC = () => {
     const [fileName, setFileName] = useState("");
     const [newFileName, setNewFileName] = useState("");
     const [content, setContent] = useState("");
+    const [folders, setFolders] = useState<{ id: number; name: string }[]>([]);
+    const [currentFolder, setCurrentFolder] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
@@ -24,6 +26,7 @@ const FileEditor: React.FC = () => {
                     setFileName(data.file_name);
                     setNewFileName(data.file_name);
                     setContent(data.content || "");
+                    setCurrentFolder(data.folder_id);
                     setLoading(false);
                 })
                 .catch((err) => {
@@ -31,19 +34,21 @@ const FileEditor: React.FC = () => {
                     setError(err.message);
                     setLoading(false);
                 });
+
+            fetch("https://learnia.charlesagostinelli.com/api/folders/", {
+                headers: { "Authorization": `Bearer ${token}` },
+            })
+                .then((res) => res.json())
+                .then((data) => setFolders(data))
+                .catch((err) => console.error("Erreur dossiers :", err));
         }
     }, [fileId]);
 
     const handleUpdateFile = async () => {
         const token = localStorage.getItem("token");
 
-        if (!token) {
-            setError("Vous devez être connecté.");
-            return;
-        }
-
         try {
-            const response = await fetch(`https://learnia.charlesagostinelli.com/api/files/${fileId}/update/`, {
+            await fetch(`https://learnia.charlesagostinelli.com/api/files/${fileId}/update/`, {
                 method: "PUT",
                 headers: {
                     "Authorization": `Bearer ${token}`,
@@ -55,42 +60,54 @@ const FileEditor: React.FC = () => {
                 }),
             });
 
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || "Erreur lors de la mise à jour du fichier");
-
-            alert("Fichier mis à jour avec succès !");
-            if (data.new_name) {
-                setFileName(data.new_name); // 🔥 Mise à jour du nom en dur après modification
-                setNewFileName(data.new_name);
-            }
-        } catch (err: any) {
+            setFileName(newFileName);
+            alert("Fichier mis à jour !");
+        } catch (err) {
             console.error("Erreur :", err);
-            setError(err.message);
         }
     };
 
-    if (loading) return <p>Chargement du fichier...</p>;
-    if (error) return <p className="error-message">{error}</p>;
+    const handleMoveFile = async () => {
+        const token = localStorage.getItem("token");
+
+        try {
+            await fetch(`https://learnia.charlesagostinelli.com/api/files/${fileId}/move/`, {
+                method: "PUT",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ new_folder_id: currentFolder }),
+            });
+
+            alert("Fichier déplacé !");
+        } catch (err) {
+            console.error("Erreur :", err);
+        }
+    };
 
     return (
         <div className="dashboard-container">
             <Sidebar />
             <div className="file-editor">
-                <h1>Édition :
-                    <input
-                        className="file-name-input"
-                        value={newFileName}
-                        onChange={(e) => setNewFileName(e.target.value)}
-                    />
+                <h1>
+                    Édition :
+                    <input value={newFileName} onChange={(e) => setNewFileName(e.target.value)} />
                 </h1>
-                <textarea
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    className="file-content-editor"
-                />
-                <button className="save-button" onClick={handleUpdateFile}>
-                    Enregistrer
-                </button>
+
+                <label>Déplacer vers :</label>
+                <select value={currentFolder ?? ""} onChange={(e) => setCurrentFolder(Number(e.target.value))}>
+                    {folders.map((folder) => (
+                        <option key={folder.id} value={folder.id}>{folder.name}</option>
+                    ))}
+                </select>
+
+                <textarea value={content} onChange={(e) => setContent(e.target.value)} />
+
+                <div className="button-container">
+                    <button className="save-button" onClick={handleUpdateFile}>Enregistrer</button>
+                    <button className="move-button" onClick={handleMoveFile}>Déplacer</button>
+                </div>
             </div>
         </div>
     );

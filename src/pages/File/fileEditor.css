@@ -1,68 +1,68 @@
-/* Global container */
 .dashboard-container {
     display: flex;
-    min-height: 100vh;
-    background: #f5f7fa;
+    height: 100vh;
 }
 
-/* Main file editor section */
 .file-editor {
-    flex-grow: 1;
-    padding: 40px;
-    background: #ffffff;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    width: 80%;
+    margin-left: 20%;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 2px 0px 10px rgba(0, 0, 0, 0.1);
+    background-color: #f7f7f7;
 }
 
-/* File title */
 .file-editor h1 {
     font-size: 24px;
-    color: #333;
     margin-bottom: 20px;
+    color: #333;
 }
 
-/* Textarea for file content */
-.file-content-editor {
-    width: 100%;
-    max-width: 800px;
-    min-height: 400px;
-    padding: 15px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 16px;
-    font-family: monospace;
-    background: #f8f8f8;
-    resize: vertical;
-    outline: none;
-}
-
-/* Save button */
-.save-button {
-    margin-top: 15px;
-    padding: 12px 20px;
-    background: #007bff;
-    color: white;
+.file-editor input[type="text"] {
+    width: 50%;
+    height: 40px;
+    padding: 10px;
+    border-radius: 5px;
     border: none;
-    border-radius: 8px;
+    background-color: #f7f7f7;
+    box-shadow: inset 2px 0px 4px rgba(0, 0, 0, 0.1);
+}
+
+.file-editor textarea {
+    width: 100%;
+    height: 200px;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid black;
+    background-color: #f7f7f7;
+    box-shadow: inset 2px 0px 4px rgba(0, 0, 0, 0.1);
+}
+
+.file-editor select {
+    width: 50%;
+    height: 40px;
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+    background-color: #f7f7f7;
+    box-shadow: inset 2px 0px 4px rgba(0, 0, 0, 0.1);
+}
+
+.file-editor button {
+    width: 150px;
+    height: 40px;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #333;
+    color: #fff;
+    border: none;
     cursor: pointer;
-    font-size: 16px;
-    transition: background 0.3s ease;
 }
 
-.save-button:hover {
-    background: #0056b3;
+.file-editor .save-button {
+    margin-right: 20px;
 }
 
-/* Error message */
-.error-message {
-    color: red;
-    font-size: 14px;
-    margin-top: 10px;
-}
-
-/* Loading message */
-.loading-message {
-    font-size: 16px;
-    color: #666;
+.file-editor .move-button {
+    background-color: cadetblue;
 }

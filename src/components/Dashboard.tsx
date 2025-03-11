@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "../style/dashboard.css";
 
 const Dashboard: React.FC = () => {
-    const [folders, setFolders] = useState<string[]>([]);
+    const [folders, setFolders] = useState<{ id: number, name: string }[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -14,19 +16,21 @@ const Dashboard: React.FC = () => {
             })
                 .then(response => response.json())
                 .then(data => {
-                    setFolders(data.map((folder: any) => folder.name));
+                    setFolders(data.map((folder: any) => ({ id: folder.id, name: folder.name })));
                     setIsLoading(false);
                 })
                 .catch(err => {
                     console.error("Erreur lors de la récupération des dossiers :", err);
                     setIsLoading(false);
-
                 });
         }
     }, []);
 
-    return (
+    const handleFolderClick = (folderId: number) => {
+        navigate(`/folder/${folderId}`);
+    };
 
+    return (
         <div className="dashboard">
             <div className="recording">
                 <div className="mic" onClick={() => alert("Enregistrement démarré!")}>🎤</div>
@@ -39,9 +43,9 @@ const Dashboard: React.FC = () => {
                     {isLoading ? (
                         <p className="loading">Chargement des dossiers...</p>
                     ) : folders.length > 0 ? (
-                        folders.map((folder, index) => (
-                            <div key={index} className="folder" onClick={() => alert(`Ouvrir le dossier : ${folder}`)}>
-                                📁 {folder}
+                        folders.map((folder) => (
+                            <div key={folder.id} className="folder" onClick={() => handleFolderClick(folder.id)}>
+                                📁 {folder.name}
                             </div>
                         ))
                     ) : (
