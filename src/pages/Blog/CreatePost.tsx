@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar";
-import "./blog.css";
+import "./createPost.css";
 
 const CreatePost: React.FC = () => {
     const [description, setDescription] = useState("");
@@ -17,30 +17,24 @@ const CreatePost: React.FC = () => {
     };
 
     const handleCreatePost = async () => {
-        setError(null); // Reset des erreurs
         const token = localStorage.getItem("token");
         if (!token) {
-            setError("Vous devez être connecté.");
+            setError("Vous devez être connecté !");
             return;
         }
 
         if (!description.trim()) {
-            setError("Le champ description est requis.");
-            return;
-        }
-
-        if (!image) {
-            setError("Veuillez ajouter une image.");
+            setError("La description est requise !");
             return;
         }
 
         const formData = new FormData();
-        formData.append("description", description); // 🔥 Assurez-vous que `description` correspond bien à l'API !
-        formData.append("classe", className);
-        formData.append("image", image);
+        formData.append("description", description);
+        formData.append("classe", className);  // 🔥 Corrige ici !
 
-        // Vérification des données envoyées
-        console.log("Données envoyées :", Object.fromEntries(formData.entries()));
+        if (image) {
+            formData.append("image", image);
+        }
 
         try {
             const response = await fetch("https://learnia.charlesagostinelli.com/api/blog/", {
@@ -51,18 +45,19 @@ const CreatePost: React.FC = () => {
                 body: formData,
             });
 
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || "Erreur lors de la création du post");
+            if (response.ok) {
+                navigate("/blog");
+            } else {
+                const errorData = await response.json();
+                setError(errorData.error || "Erreur lors de la création du post");
             }
-
-            navigate("/blog");
-        } catch (err: any) {
-            console.error("Erreur lors de la création du post :", err);
-            setError(err.message);
+        } catch (error) {
+            setError("Erreur de connexion au serveur.");
+            console.error("Erreur :", error);
         }
     };
+
+
 
     return (
         <div className="blog-container">

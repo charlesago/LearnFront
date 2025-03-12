@@ -68,6 +68,9 @@ const Sidebar: React.FC = () => {
         if (menu === "folders") {
             navigate("/folder");
         }
+        if (menu === "blog"){
+            navigate("/blog");
+        }
     };
 
     const handleFolderClick = (event: React.MouseEvent, folderId: number) => {
