@@ -7,7 +7,8 @@ import DashboardPage from "../pages/DashBoard/DashboardPage.tsx";
 import FoldersPage from "../pages/Folder/Folder.tsx";
 import FilesPage from "../pages/File/File.tsx";
 import FileEditor from "../pages/File/FileEditor";
-
+import Blog from "../pages/Blog/Blog.tsx";
+import CreatePost from "../pages/Blog/CreatePost.tsx"
 const AppRoutes: React.FC = () => {
     return (
         <Router>
@@ -20,6 +21,8 @@ const AppRoutes: React.FC = () => {
                 <Route path="/Folder" element={<FoldersPage />} />
                 <Route path="/folder/:folderId" element={<FilesPage />} />
                 <Route path="/file/:fileId" element={<FileEditor />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/blog/new" element={<CreatePost />} />
             </Routes>
         </Router>
     );

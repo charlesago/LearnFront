@@ -1,0 +1,111 @@
+/* Général */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+.blog-container {
+    display: flex;
+    min-height: 100vh;
+    background: #f5f7fa;
+}
+
+.blog-content {
+    flex: 1;
+    padding: 20px;
+}
+
+/* Barre de recherche et bouton */
+.blog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.search-bar {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    width: 50%;
+}
+
+.new-post-button {
+    background: #007BFF;
+    color: white;
+    font-size: 20px;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.new-post-button:hover {
+    background: #0056b3;
+}
+
+/* Liste des posts */
+.post-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.post-card {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.post-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.profile-pic {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.post-image {
+    width: 100%;
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+
+.post-content {
+    color: #444;
+    margin-bottom: 5px;
+}
+
+.post-class {
+    font-size: 14px;
+    color: #777;
+}
+
+/* Formulaire */
+.file-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.post-button {
+    background: #007BFF;
+    color: white;
+    width: 100%;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+}
