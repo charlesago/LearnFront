@@ -7,7 +7,7 @@ const Blog: React.FC = () => {
     const [posts, setPosts] = useState<
         {
             id: number;
-            author_username: string;
+            author: { firstname: string };
             description: string;
             image: string | null;
             classe: string;
@@ -15,7 +15,7 @@ const Blog: React.FC = () => {
             comments_count: number;
             liked: boolean;
             showComments: boolean;
-            comments: Array<{ id: number; content: string; author_username: string }>;
+            comments: Array<{ id: number; content: string; author: { username: string } }>;
         }[]
     >([]);
     const [commentInput, setCommentInput] = useState<{ [key: number]: string }>({});
@@ -31,7 +31,7 @@ const Blog: React.FC = () => {
                 .then((data) => {
                     const fetchPosts = data.map((post: any) => ({
                         id: post.id,
-                        author_username: post.author.username || "Utilisateur inconnu",
+                        author: { firstname: post.author_firstname || "Utilisateur inconnu" },
                         description: post.description || "",
                         classe: post.classe || "Non spécifiée",
                         image: post.image ? `https://learnia.charlesagostinelli.com${post.image}` : "https://via.placeholder.com/300",
@@ -42,18 +42,33 @@ const Blog: React.FC = () => {
                         comments: []
                     }));
 
-                    fetchPosts.forEach(post => {
-                        fetch(`https://learnia.charlesagostinelli.com/api/blog/${post.id}/comments/`, {
-                            headers: { "Authorization": `Bearer ${token}` },
-                        })
-                            .then(res => res.json())
-                            .then(commentsData => {
-                                post.comments = commentsData;
-                            })
-                            .catch(err => console.error("Erreur récupération des commentaires :", err));
-                    });
+                    const checkLikes = async () => {
+                        for (let post of fetchPosts) {
+                            try {
+                                const likeResponse = await fetch(`https://learnia.charlesagostinelli.com/api/blog/${post.id}/like/`, {
+                                    method: "GET",
+                                    headers: { "Authorization": `Bearer ${token}` },
+                                });
+                                const likeData = await likeResponse.json();
+                                post.liked = likeData.liked;
+                            } catch (err) {
+                                console.error("Erreur vérification des likes :", err);
+                            }
 
-                    setPosts(fetchPosts);
+                            try {
+                                const commentsResponse = await fetch(`https://learnia.charlesagostinelli.com/api/blog/${post.id}/comments/`, {
+                                    headers: { "Authorization": `Bearer ${token}` },
+                                });
+                                const commentsData = await commentsResponse.json();
+                                post.comments = commentsData;
+                            } catch (err) {
+                                console.error("Erreur récupération des commentaires :", err);
+                            }
+                        }
+                        setPosts(fetchPosts);
+                    };
+
+                    checkLikes();
                 })
                 .catch((err) => console.error("Erreur récupération des posts :", err));
         }
@@ -135,7 +150,7 @@ const Blog: React.FC = () => {
                         <div key={post.id} className="post-card">
                             <div className="post-header">
                                 <img src="https://via.placeholder.com/40" alt="profil" className="profile-pic" />
-                                <span className="author-name">{post.author_username}</span>
+                                <span className="author-name">{post.author.firstname}</span>
                             </div>
                             <img src={post.image} alt="post" className="post-image" />
                             <p className="post-content">{post.description.substring(0, 100)}...</p>
@@ -152,7 +167,7 @@ const Blog: React.FC = () => {
                                 <div className="comment-section">
                                     {post.comments.map((comment) => (
                                         <div key={comment.id} className="comment">
-                                            <strong>{comment.author_username}:</strong> {comment.content}
+                                           {comment.content}
                                         </div>
                                     ))}
                                     <input

@@ -30,7 +30,7 @@ const CreatePost: React.FC = () => {
 
         const formData = new FormData();
         formData.append("description", description);
-        formData.append("classe", className);  // 🔥 Corrige ici !
+        formData.append("classe", className);
 
         if (image) {
             formData.append("image", image);
