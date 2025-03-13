@@ -233,7 +233,7 @@ const Profil: React.FC = () => {
                                         <div className="comment-section">
                                             {post.comments.map((comment) => (
                                                 <div key={comment.id} className="comment">
-                                                    <strong>{}:</strong>
+                                                    <strong>{comment.user.username}:</strong>
                                                     {editingComment[comment.id] !== undefined ? (
                                                         <>
                                                             <input
