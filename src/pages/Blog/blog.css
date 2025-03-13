@@ -94,13 +94,11 @@
     margin-bottom: 10px;
 }
 
-/* Classe du post */
 .post-class {
     color: #555;
     margin-bottom: 10px;
 }
 
-/* Bouton "Voir plus" */
 .view-more {
     padding: 5px 10px;
     border: none;
@@ -109,6 +107,7 @@
     border-radius: 4px;
     cursor: pointer;
 }
+
 .post-actions {
     display: flex;
     gap: 10px;
@@ -144,6 +143,7 @@
     cursor: pointer;
     border-radius: 5px;
 }
+
 .like-button {
     background: none;
     border: none;
@@ -171,4 +171,38 @@
 
 .comment strong {
     color: #333;
+}
+
+.modalSearch {
+    justify-content: center;
+    position: fixed;
+    margin-top: 50px;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.modalSearch-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 886px;
+    max-height: 80%;
+    overflow-y: auto;
+}
+
+.close {
+    float: right;
+    font-size: 1.5em;
+    cursor: pointer;
+}
+
+.search-results {
+    list-style: none;
+    padding: 0;
+}
+
+.search-results li {
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
 }

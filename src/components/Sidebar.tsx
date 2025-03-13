@@ -47,8 +47,9 @@ const Sidebar: React.FC = () => {
                     setUser({
                         first_name: data.first_name,
                         last_name: data.last_name,
-                        avatar: data.avatar || "/assets/default-avatar.png"
+                        avatar: data.avatar || "../../public/assets/default-avatar.png"
                     });
+                    console.log("Profil :", data);
                 })
                 .catch(err => console.error("Erreur lors de la récupération du profil :", err));
 
@@ -70,6 +71,9 @@ const Sidebar: React.FC = () => {
         }
         if (menu === "blog"){
             navigate("/blog");
+        }
+        if (menu === "profil"){
+            navigate("/profil");
         }
     };
 
@@ -129,8 +133,13 @@ const Sidebar: React.FC = () => {
             </ul>
 
             <div className="sidebar-footer">
+                <li
+                    className={activeMenu === "profil" ? "active" : ""}
+                    onClick={() => handleMenuClick("profil")}
+                >
                 <img src={user.avatar} alt="Avatar" className="avatar" />
                 {isOpen && <p>{user.first_name} {user.last_name}</p>}
+                </li>
             </div>
         </div>
     );
