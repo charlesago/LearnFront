@@ -78,6 +78,9 @@ const FilesPage: React.FC = () => {
                 <div className="file-list">
                     {files.map((file) => (
                         <div key={file.id} className="file-card">
+                            <div className="">
+                                <img src="../../../public/assets/fichier.png" className="logo"/>
+                            </div>
                             <div onClick={() => navigate(`/file/${file.id}`)}>{file.name}</div>
                             <button className="file-options" onClick={() => setSelectedFileId(file.id)}>⋮</button>
                             {selectedFileId === file.id && (

@@ -219,7 +219,6 @@
 }
 
 .file-card div {
-    flex-grow: 1;
     cursor: pointer;
 }
 

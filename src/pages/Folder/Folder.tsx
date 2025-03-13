@@ -76,6 +76,9 @@ const FoldersPage: React.FC = () => {
                 <div className="folder-list">
                     {folders.map((folder) => (
                         <div key={folder.id} className="folder-card">
+                            <div className="">
+                            <img src="../../../public/assets/6421284.png" className="logo"/>
+                            </div>
                             <div className="folder-name" onClick={() => navigate(`/folder/${folder.id}`)}>
                                 <h2>{folder.name}</h2>
                                 <p>{folder.notes} Notes</p>
