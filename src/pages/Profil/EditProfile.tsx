@@ -80,7 +80,7 @@ const EditProfile: React.FC = () => {
             <div className="edit-profile-content">
                 <h2 className="title">Modifier le profil</h2>
                 <div className="profile-avatar-section">
-                    <img src={profile.avatar} alt="Avatar" className="profile-avatar" />
+                    <img src="https://learnia.charlesagostinelli.com/${profile.avatar}" alt="Avatar" className="profile-avatar" />
                     <label htmlFor="avatar-upload" className="change-avatar">
                         Changer la photo de profil
                     </label>

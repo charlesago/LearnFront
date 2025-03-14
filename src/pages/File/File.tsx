@@ -20,7 +20,7 @@ const FilesPage: React.FC = () => {
                 .then(res => res.json())
                 .then(data => {
                     setFiles(data.map((file: any) => ({
-                        name: file.file,
+                        name: file.file.replace(/^\/media\//, ""),
                         id: file.id
                     })));
                 })
@@ -81,7 +81,7 @@ const FilesPage: React.FC = () => {
                             <div className="">
                                 <img src="../../../public/assets/fichier.png" className="logo"/>
                             </div>
-                            <div onClick={() => navigate(`/file/${file.id}`)}>{file.name}</div>
+                            <div onClick={() => navigate(`/Viewfile/${file.id}`)}>{file.name}</div>
                             <button className="file-options" onClick={() => setSelectedFileId(file.id)}>⋮</button>
                             {selectedFileId === file.id && (
                                 <div className="context-menu">
@@ -91,6 +91,7 @@ const FilesPage: React.FC = () => {
                         </div>
                     ))}
                 </div>
+
                 <button className="new-file-button" onClick={() => setIsModalOpen(true)}>
                     Nouveau Fichier
                 </button>

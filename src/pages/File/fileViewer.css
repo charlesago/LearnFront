@@ -1,0 +1,46 @@
+.file-viewer-layout {
+    display: flex;
+    height: 100vh;
+}
+
+.file-content {
+    flex: 1;
+    padding: 20px;
+    margin-left: 250px; /* Assure que le contenu ne touche pas la sidebar */
+    display: flex;
+    flex-direction: column;
+}
+
+.file-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.back-button, .edit-button {
+    padding: 8px 12px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.back-button {
+    background: #ddd;
+}
+
+.edit-button {
+    background: #4285f4;
+    color: white;
+}
+
+.file-display {
+    background: #f5f5f5;
+    padding: 20px;
+    border-radius: 8px;
+    white-space: pre-wrap;
+    font-family: monospace;
+    max-width: 100%;
+    overflow: auto;
+    height: calc(100vh - 100px);
+}

@@ -12,6 +12,8 @@ import CreatePost from "../pages/Blog/CreatePost.tsx"
 import Profil from "../pages/Profil/Profil.tsx";
 import EditProfile from "../pages/Profil/EditProfile.tsx";
 import OtherProfil from "../pages/Profil/OtherProfil.tsx";
+import FileViewer from "../pages/File/FIleViewer.tsx";
+import Recorder from "../pages/Recorder/Recorder.tsx";
 const AppRoutes: React.FC = () => {
     return (
         <Router>
@@ -29,6 +31,8 @@ const AppRoutes: React.FC = () => {
                 <Route path="/profil" element={<Profil />} />
                 <Route path="/editprofil" element={<EditProfile />} />
                 <Route path="/profil/:userId" element={<OtherProfil />} />
+                <Route path="/Viewfile/:fileId" element={<FileViewer />} />
+                <Route path="/recorder" element={<Recorder />} />
 
             </Routes>
         </Router>
