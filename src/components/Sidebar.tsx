@@ -47,7 +47,7 @@ const Sidebar: React.FC = () => {
                     setUser({
                         first_name: data.first_name,
                         last_name: data.last_name,
-                        avatar: data.avatar || "../../public/assets/default-avatar.png"
+                        avatar: data.avatar ? `https://learnia.charlesagostinelli.com${data.avatar}` : "../../public/assets/default-avatar.png"
                     });
                     console.log("Profil :", data);
                 })
@@ -137,8 +137,8 @@ const Sidebar: React.FC = () => {
                     className={activeMenu === "profil" ? "active" : ""}
                     onClick={() => handleMenuClick("profil")}
                 >
-                <img src={user.avatar} alt="Avatar" className="avatar" />
-                {isOpen && <p>{user.first_name} {user.last_name}</p>}
+                    <img src={user.avatar} alt="Avatar" className="avatar" />
+                    {isOpen && <p>{user.first_name} {user.last_name}</p>}
                 </li>
             </div>
         </div>

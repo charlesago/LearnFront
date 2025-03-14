@@ -17,7 +17,11 @@ const Blog: React.FC = () => {
             showComments: boolean;
             comments: Array<{
                 user_username: any;
-                id: number; content: string; user: { user_username: string; id: number } }>;
+                id: number;
+                content: string;
+                user: { user_username: string; id: number }
+                user_id?: number;
+            }>;
         }[]
     >([]);
     const [commentInput, setCommentInput] = useState<{ [key: number]: string }>({});
@@ -98,6 +102,11 @@ const Blog: React.FC = () => {
             });
             if (response.ok) {
                 const commentsData = await response.json();
+
+                // Ajoutez des logs pour inspecter la structure
+                console.log("Données de commentaires brutes:", commentsData);
+                console.log("Utilisateur actuel:", currentUser);
+
                 setPosts((prevPosts) =>
                     prevPosts.map((post) =>
                         post.id === postId ? { ...post, comments: commentsData, showComments: true } : post
@@ -109,6 +118,22 @@ const Blog: React.FC = () => {
         }
     };
 
+    const handleDeletePost = async (postId: number) => {
+        if (!token) return;
+
+        try {
+            const response = await fetch(`https://learnia.charlesagostinelli.com/api/blog/${postId}/delete/`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (response.ok) {
+                setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
+            }
+        } catch (error) {
+            console.error("Erreur lors de la suppression du post :", error);
+        }
+    };
     const handleLike = async (postId: number) => {
         const token = localStorage.getItem("token");
         if (!token) return;
@@ -273,9 +298,16 @@ const Blog: React.FC = () => {
                             {searchResults.length > 0 ? (
                                 <ul className="search-results">
                                     {searchResults.map((result) => (
-                                        <li key={result.id}>{result.username}</li>
+                                        <li
+                                            key={result.id}
+                                            onClick={() => navigate(`/profil/${result.id}`)}
+                                            className="search-result-item"
+                                        >
+                                            {result.username}
+                                        </li>
                                     ))}
                                 </ul>
+
                             ) : (
                                 <p>Aucun résultat trouvé</p>
                             )}
@@ -286,7 +318,12 @@ const Blog: React.FC = () => {
                     {posts.map((post) => (
                         <div key={post.id} className="post-card">
                             <div className="post-header">
-                                <span className="author-name">{post.author.username}</span>
+                                <span className="author-name" onClick={() => navigate(`/profile/${post.author.id}`)}>
+                                    {post.author.username}
+                                </span>
+                                {currentUser && currentUser.id === post.author.id && (
+                                    <button className="delete-post-btn" onClick={() => handleDeletePost(post.id)}>🗑</button>
+                                )}
                             </div>
                             <img src={post.image} alt="post" className="post-image" />
                             <p className="post-content">{post.description.substring(0, 100)}...</p>
@@ -303,42 +340,103 @@ const Blog: React.FC = () => {
                             {post.showComments && (
                                 <div className="comment-section">
                                     {post.comments.map((comment) => (
-                                        <div key={comment.id} className="comment">
-                                            <strong>{comment.user_username}:</strong>
+                                        <div key={comment.id} className="comment" style={{
+                                            display: 'flex',
+                                            flexWrap: 'wrap',
+                                            alignItems: 'center',
+                                            padding: '10px',
+                                            marginBottom: '10px',
+                                            backgroundColor: '#f8f9fa',
+                                            borderRadius: '8px'
+                                        }}>
+                                            <strong style={{marginRight: '8px'}}>
+                                                {comment.user_username || comment.user?.user_username || "Utilisateur"}:
+                                            </strong>
+
                                             {editingComment[comment.id] !== undefined ? (
                                                 <>
                                                     <input
                                                         type="text"
                                                         value={editingComment[comment.id]}
-                                                        onChange={(e) =>
-                                                            setEditingComment({ ...editingComment, [comment.id]: e.target.value })
-                                                        }
+                                                        onChange={(e) => setEditingComment({ ...editingComment, [comment.id]: e.target.value })}
+                                                        style={{
+                                                            flex: 1,
+                                                            padding: '5px',
+                                                            margin: '0 10px',
+                                                            borderRadius: '4px',
+                                                            border: '1px solid #ddd'
+                                                        }}
                                                     />
-                                                    <button onClick={() => handleUpdateComment(post.id, comment.id)}>💾</button>
+                                                    <button
+                                                        onClick={() => handleUpdateComment(post.id, comment.id)}
+                                                        style={{
+                                                            background: 'none',
+                                                            border: 'none',
+                                                            cursor: 'pointer',
+                                                            fontSize: '16px'
+                                                        }}
+                                                    >💾</button>
                                                 </>
                                             ) : (
                                                 <>
-                                                    {comment.content}
-                                                    {currentUser && comment.user.id === currentUser.id && (
-                                                        <>
-                                                            <button onClick={() => setEditingComment({ ...editingComment, [comment.id]: comment.content })}>
-                                                                ✏
-                                                            </button>
-                                                            <button onClick={() => handleDeleteComment(post.id, comment.id)}>🗑</button>
-                                                        </>
-                                                    )}
+                                                    <span style={{flex: 1}}>{comment.content}</span>
+
+                                                    {/* Cette condition sera toujours vraie pour l'instant */}
+                                                    <div style={{marginLeft: 'auto', display: 'flex', gap: '5px'}}>
+                                                        <button
+                                                            style={{
+                                                                background: 'none',
+                                                                border: 'none',
+                                                                cursor: 'pointer',
+                                                                fontSize: '16px'
+                                                            }}
+                                                            onClick={() => setEditingComment({ ...editingComment, [comment.id]: comment.content })}
+                                                        >
+                                                            ✏️
+                                                        </button>
+                                                        <button
+                                                            style={{
+                                                                background: 'none',
+                                                                border: 'none',
+                                                                cursor: 'pointer',
+                                                                fontSize: '16px'
+                                                            }}
+                                                            onClick={() => handleDeleteComment(post.id, comment.id)}
+                                                        >
+                                                            🗑️
+                                                        </button>
+                                                    </div>
                                                 </>
                                             )}
                                         </div>
                                     ))}
+
                                     <input
                                         type="text"
-                                        className="comment-input"
                                         placeholder="Ajouter un commentaire..."
                                         value={commentInput[post.id] || ""}
                                         onChange={(e) => setCommentInput({ ...commentInput, [post.id]: e.target.value })}
+                                        style={{
+                                            width: '100%',
+                                            padding: '10px',
+                                            borderRadius: '20px',
+                                            border: '1px solid #ddd',
+                                            marginBottom: '10px'
+                                        }}
                                     />
-                                    <button className="send-comment" onClick={() => handleComment(post.id)}>Envoyer</button>
+                                    <button
+                                        onClick={() => handleComment(post.id)}
+                                        style={{
+                                            backgroundColor: '#4285f4',
+                                            color: 'white',
+                                            border: 'none',
+                                            padding: '8px 16px',
+                                            borderRadius: '20px',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Envoyer
+                                    </button>
                                 </div>
                             )}
                         </div>

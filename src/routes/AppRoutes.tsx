@@ -10,6 +10,8 @@ import FileEditor from "../pages/File/FileEditor";
 import Blog from "../pages/Blog/Blog.tsx";
 import CreatePost from "../pages/Blog/CreatePost.tsx"
 import Profil from "../pages/Profil/Profil.tsx";
+import EditProfile from "../pages/Profil/EditProfile.tsx";
+import OtherProfil from "../pages/Profil/OtherProfil.tsx";
 const AppRoutes: React.FC = () => {
     return (
         <Router>
@@ -25,6 +27,9 @@ const AppRoutes: React.FC = () => {
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/blog/new" element={<CreatePost />} />
                 <Route path="/profil" element={<Profil />} />
+                <Route path="/editprofil" element={<EditProfile />} />
+                <Route path="/profil/:userId" element={<OtherProfil />} />
+
             </Routes>
         </Router>
     );
