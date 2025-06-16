@@ -17,7 +17,7 @@ const FileEditor: React.FC = () => {
         const token = localStorage.getItem("token");
 
         if (token) {
-            fetch(`https://learnia.charlesagostinelli.com/api/files/${fileId}/`, {
+            fetch(`http://127.0.0.1:8000/api/files/${fileId}/`, {
                 headers: { "Authorization": `Bearer ${token}` },
             })
                 .then((res) => res.json())
@@ -35,7 +35,7 @@ const FileEditor: React.FC = () => {
                     setLoading(false);
                 });
 
-            fetch("https://learnia.charlesagostinelli.com/api/folders/", {
+            fetch("http://127.0.0.1:8000/api/folders/", {
                 headers: { "Authorization": `Bearer ${token}` },
             })
                 .then((res) => res.json())
@@ -48,7 +48,7 @@ const FileEditor: React.FC = () => {
         const token = localStorage.getItem("token");
 
         try {
-            await fetch(`https://learnia.charlesagostinelli.com/api/files/${fileId}/update/`, {
+            await fetch(`http://127.0.0.1:8000/api/files/${fileId}/update/`, {
                 method: "PUT",
                 headers: {
                     "Authorization": `Bearer ${token}`,
@@ -71,7 +71,7 @@ const FileEditor: React.FC = () => {
         const token = localStorage.getItem("token");
 
         try {
-            await fetch(`https://learnia.charlesagostinelli.com/api/files/${fileId}/move/`, {
+            await fetch(`http://127.0.0.1:8000/api/files/${fileId}/move/`, {
                 method: "PUT",
                 headers: {
                     "Authorization": `Bearer ${token}`,

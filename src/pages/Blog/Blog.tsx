@@ -36,14 +36,14 @@ const Blog: React.FC = () => {
         const token = localStorage.getItem("token");
         if (!token) return;
 
-        fetch("https://learnia.charlesagostinelli.com/api/profile/", {
+        fetch("http://127.0.0.1:8000/api/profile/", {
             headers: { "Authorization": `Bearer ${token}` },
         })
             .then((res) => res.json())
             .then((data) => setCurrentUser({ id: data.id, username: data.username }))
             .catch((err) => console.error("Erreur récupération du profil :", err));
 
-        fetch("https://learnia.charlesagostinelli.com/api/blog/", {
+        fetch("http://127.0.0.1:8000/api/blog/", {
             headers: { "Authorization": `Bearer ${token}` },
         })
             .then((res) => res.json())
@@ -62,7 +62,7 @@ const Blog: React.FC = () => {
                 }));
 
                 fetchPosts.forEach(post => {
-                    fetch(`https://learnia.charlesagostinelli.com/api/blog/${post.id}/like/`, {
+                    fetch(`http://127.0.0.1:8000/api/blog/${post.id}/like/`, {
                         headers: { "Authorization": `Bearer ${token}` },
                     })
                         .then(res => res.text())  // ⚠️ Affiche le texte brut pour debugger
@@ -97,7 +97,7 @@ const Blog: React.FC = () => {
         if (!token) return;
 
         try {
-            const response = await fetch(`https://learnia.charlesagostinelli.com/api/blog/${postId}/comments/`, {
+            const response = await fetch(`http://127.0.0.1:8000/api/blog/${postId}/comments/`, {
                 headers: { "Authorization": `Bearer ${token}` },
             });
             if (response.ok) {
@@ -122,7 +122,7 @@ const Blog: React.FC = () => {
         if (!token) return;
 
         try {
-            const response = await fetch(`https://learnia.charlesagostinelli.com/api/blog/${postId}/delete/`, {
+            const response = await fetch(`http://127.0.0.1:8000/api/blog/${postId}/delete/`, {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${token}` },
             });
@@ -139,7 +139,7 @@ const Blog: React.FC = () => {
         if (!token) return;
 
         try {
-            const response = await fetch(`https://learnia.charlesagostinelli.com/api/blog/${postId}/like/`, {
+            const response = await fetch(`http://127.0.0.1:8000/api/blog/${postId}/like/`, {
                 method: "POST",
                 headers: { "Authorization": `Bearer ${token}` },
             });
@@ -163,7 +163,7 @@ const Blog: React.FC = () => {
         if (!token || !editingComment[commentId]) return;
 
         try {
-            const response = await fetch(`https://learnia.charlesagostinelli.com/api/blog/comments/${commentId}/update/`, {
+            const response = await fetch(`http://127.0.0.1:8000/api/blog/comments/${commentId}/update/`, {
                 method: "PUT",
                 headers: {
                     "Authorization": `Bearer ${token}`,
@@ -201,7 +201,7 @@ const Blog: React.FC = () => {
         if (!token) return;
 
         try {
-            const response = await fetch(`https://learnia.charlesagostinelli.com/api/blog/comments/${commentId}/delete/`, {
+            const response = await fetch(`http://127.0.0.1:8000/api/blog/comments/${commentId}/delete/`, {
                 method: "DELETE",
                 headers: { "Authorization": `Bearer ${token}` },
             });
@@ -225,7 +225,7 @@ const Blog: React.FC = () => {
         if (!token || !commentInput[postId]) return;
 
         try {
-            const response = await fetch(`https://learnia.charlesagostinelli.com/api/blog/${postId}/comments/`, {
+            const response = await fetch(`http://127.0.0.1:8000/api/blog/${postId}/comments/`, {
                 method: "POST",
                 headers: {
                     "Authorization": `Bearer ${token}`,
@@ -255,7 +255,7 @@ const Blog: React.FC = () => {
         if (!token || !searchQuery.trim()) return;
 
         try {
-            const response = await fetch(`https://learnia.charlesagostinelli.com/api/search/profiles/?query=${searchQuery}`, {
+            const response = await fetch(`http://127.0.0.1:8000/api/search/profiles/?query=${searchQuery}`, {
                 headers: { "Authorization": `Bearer ${token}` },
             });
 

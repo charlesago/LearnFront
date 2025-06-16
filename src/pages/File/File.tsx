@@ -14,7 +14,7 @@ const FilesPage: React.FC = () => {
     useEffect(() => {
         const token = localStorage.getItem("token");
         if (token && folderId) {
-            fetch(`https://learnia.charlesagostinelli.com/api/folders/${folderId}/files/`, {
+            fetch(`http://127.0.0.1:8000/api/folders/${folderId}/files/`, {
                 headers: { "Authorization": `Bearer ${token}` },
             })
                 .then(res => res.json())
@@ -32,7 +32,7 @@ const FilesPage: React.FC = () => {
         const token = localStorage.getItem("token");
         if (token && newFileName && folderId) {
             try {
-                const response = await fetch(`https://learnia.charlesagostinelli.com/api/folders/${folderId}/create-file/`, {
+                const response = await fetch(`http://127.0.0.1:8000/api/folders/${folderId}/create-file/`, {
                     method: "POST",
                     headers: {
                         "Authorization": `Bearer ${token}`,
@@ -58,7 +58,7 @@ const FilesPage: React.FC = () => {
         if (!token) return;
 
         try {
-            await fetch(`https://learnia.charlesagostinelli.com/api/files/${fileId}/delete/`, {
+            await fetch(`http://127.0.0.1:8000/api/files/${fileId}/delete/`, {
                 method: "DELETE",
                 headers: { "Authorization": `Bearer ${token}` },
             });

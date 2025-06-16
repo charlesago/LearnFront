@@ -39,7 +39,7 @@ const Profil: React.FC = () => {
     useEffect(() => {
         if (!token) return;
 
-        fetch("https://learnia.charlesagostinelli.com/api/profile/", {
+        fetch("http://127.0.0.1:8000/api/profile/", {
             headers: { Authorization: `Bearer ${token}` },
         })
             .then((res) => res.json())
@@ -58,10 +58,10 @@ const Profil: React.FC = () => {
                     last_name: data.last_name,
                     birth_date: data.birth_date,
                     gender: data.gender,
-                    avatar: data.avatar ? `https://learnia.charlesagostinelli.com${data.avatar}` : "https://via.placeholder.com/150",
+                    avatar: data.avatar ? `http://127.0.0.1:8000${data.avatar}` : "https://via.placeholder.com/150",
                 });
 
-                fetch(`https://learnia.charlesagostinelli.com/api/blog/user/${data.id}/`, {
+                fetch(`http://127.0.0.1:8000/api/blog/user/${data.id}/`, {
                     headers: { Authorization: `Bearer ${token}` },
                 })
                     .then((res) => res.json())
@@ -71,7 +71,7 @@ const Profil: React.FC = () => {
                             liked: false,
                             showComments: false,
                             comments: [],
-                            image: post.image ? `https://learnia.charlesagostinelli.com${post.image}` : "https://via.placeholder.com/400"
+                            image: post.image ? `http://127.0.0.1:8000${post.image}` : "https://via.placeholder.com/400"
                         })));
                         setLoading(false);
                     })
@@ -99,7 +99,7 @@ const Profil: React.FC = () => {
         formData.append('avatar', avatarFile);
 
         try {
-            const response = await fetch("https://learnia.charlesagostinelli.com/api/profile/", {
+            const response = await fetch("http://127.0.0.1:8000/api/profile/", {
                 method: "PUT",
                 headers: {
                     "Authorization": `Bearer ${token}`
@@ -109,7 +109,7 @@ const Profil: React.FC = () => {
 
             if (response.ok) {
                 const updatedUser = await response.json();
-                setUser(prevUser => ({ ...prevUser, avatar: `https://learnia.charlesagostinelli.com${updatedUser.avatar}` }));
+                setUser(prevUser => ({ ...prevUser, avatar: `http://127.0.0.1:8000${updatedUser.avatar}` }));
                 setAvatarFile(null);
             }
         } catch (error) {
@@ -121,7 +121,7 @@ const Profil: React.FC = () => {
         if (!token) return;
 
         try {
-            const response = await fetch(`https://learnia.charlesagostinelli.com/api/blog/${postId}/comments/`, {
+            const response = await fetch(`http://127.0.0.1:8000/api/blog/${postId}/comments/`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
@@ -142,7 +142,7 @@ const Profil: React.FC = () => {
         if (!token || !commentInput[postId]) return;
 
         try {
-            const response = await fetch(`https://learnia.charlesagostinelli.com/api/blog/${postId}/comments/`, {
+            const response = await fetch(`http://127.0.0.1:8000/api/blog/${postId}/comments/`, {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -171,7 +171,7 @@ const Profil: React.FC = () => {
         if (!token || !editingComment[commentId]) return;
 
         try {
-            const response = await fetch(`https://learnia.charlesagostinelli.com/api/blog/comments/${commentId}/update/`, {
+            const response = await fetch(`http://127.0.0.1:8000/api/blog/comments/${commentId}/update/`, {
                 method: "PUT",
                 headers: {
                     "Authorization": `Bearer ${token}`,
@@ -208,7 +208,7 @@ const Profil: React.FC = () => {
         if (!token) return;
 
         try {
-            const response = await fetch(`https://learnia.charlesagostinelli.com/api/blog/comments/${commentId}/delete/`, {
+            const response = await fetch(`http://127.0.0.1:8000/api/blog/comments/${commentId}/delete/`, {
                 method: "DELETE",
                 headers: { "Authorization": `Bearer ${token}` },
             });

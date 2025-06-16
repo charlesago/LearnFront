@@ -14,7 +14,7 @@ const FileViewer: React.FC = () => {
     useEffect(() => {
         if (!fileId || !token) return;
 
-        fetch(`https://learnia.charlesagostinelli.com/api/files/${fileId}/`, {
+        fetch(`http://127.0.0.1:8000/api/files/${fileId}/`, {
             headers: { Authorization: `Bearer ${token}` },
         })
             .then((res) => res.json())

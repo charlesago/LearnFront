@@ -37,7 +37,7 @@ const CreatePost: React.FC = () => {
         }
 
         try {
-            const response = await fetch("https://learnia.charlesagostinelli.com/api/blog/", {
+            const response = await fetch("http://127.0.0.1:8000/api/blog/", {
                 method: "POST",
                 headers: {
                     "Authorization": `Bearer ${token}`,

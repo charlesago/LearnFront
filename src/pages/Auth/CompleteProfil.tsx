@@ -31,7 +31,7 @@ const CompleteProfil: React.FC = () => {
         }
 
         try {
-            const response = await fetch("https://learnia.charlesagostinelli.com/api/profile/", {
+            const response = await fetch("http://127.0.0.1:8000/api/profile/", {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",

@@ -20,7 +20,7 @@ const EditProfile: React.FC = () => {
     useEffect(() => {
         if (!token) return;
 
-        fetch("https://learnia.charlesagostinelli.com/api/profile/", {
+        fetch("http://127.0.0.1:8000/api/profile/", {
             headers: { Authorization: `Bearer ${token}` },
         })
             .then((res) => res.json())
@@ -58,7 +58,7 @@ const EditProfile: React.FC = () => {
         if (newAvatar) formData.append("avatar", newAvatar);
 
         try {
-            const response = await fetch("https://learnia.charlesagostinelli.com/api/profile/", {
+            const response = await fetch("http://127.0.0.1:8000/api/profile/", {
                 method: "PUT",
                 headers: { Authorization: `Bearer ${token}` },
                 body: formData,

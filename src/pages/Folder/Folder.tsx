@@ -13,7 +13,7 @@ const FoldersPage: React.FC = () => {
     useEffect(() => {
         const token = localStorage.getItem("token");
         if (token) {
-            fetch("https://learnia.charlesagostinelli.com/api/folders/", {
+            fetch("http://127.0.0.1:8000/api/folders/", {
                 headers: { "Authorization": `Bearer ${token}` },
             })
                 .then(res => res.json())
@@ -30,7 +30,7 @@ const FoldersPage: React.FC = () => {
         const token = localStorage.getItem("token");
         if (token && newFolderName) {
             try {
-                const response = await fetch("https://learnia.charlesagostinelli.com/api/folders/", {
+                const response = await fetch("http://127.0.0.1:8000/api/folders/", {
                     method: "POST",
                     headers: {
                         "Authorization": `Bearer ${token}`,
@@ -56,7 +56,7 @@ const FoldersPage: React.FC = () => {
         if (!token) return;
 
         try {
-            await fetch(`https://learnia.charlesagostinelli.com/api/folders/${folderId}/`, {
+            await fetch(`http://127.0.0.1:8000/api/folders/${folderId}/`, {
                 method: "DELETE",
                 headers: { "Authorization": `Bearer ${token}` },
             });

@@ -15,7 +15,7 @@ const Register: React.FC = () => {
         setError("");
 
         try {
-            const response = await fetch("https://learnia.charlesagostinelli.com/api/register/", {
+            const response = await fetch("http://127.0.0.1:8000//api/register/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -33,7 +33,7 @@ const Register: React.FC = () => {
 
             setTimeout(async () => {
                 try {
-                    const loginResponse = await fetch("https://learnia.charlesagostinelli.com/api/login/", {
+                    const loginResponse = await fetch("http://127.0.0.1:8000//api/login/", {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
