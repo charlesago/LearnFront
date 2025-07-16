@@ -2,429 +2,741 @@
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { 
+    User, 
+    Mail, 
+    Calendar, 
+    MapPin, 
+    Edit3, 
+    Camera, 
+    Heart, 
+    MessageCircle, 
+    Send, 
+    Trash2, 
+    Settings,
+    FileText,
+    Users,
+    Award,
+    Loader2,
+    Plus,
+    UserPlus,
+    UserMinus,
+    Eye
+} from "lucide-react";
 import Sidebar from "../../components/Sidebar";
-import "./profil.css";
+import { API_ENDPOINTS, buildApiUrl, buildMediaUrl } from "../../config/api";
+
+interface Comment {
+    id: number;
+    content: string;
+    user: { id: number; username: string };
+}
+
+interface Post {
+    id: number;
+    description: string;
+    image: string | null;
+    likes_count: number;
+    comments_count: number;
+    liked: boolean;
+    showComments: boolean;
+    comments: Comment[];
+    classe: string;
+    created_at: string;
+}
+
+interface UserProfile {
+    id: number;
+    username: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+    avatar?: string;
+}
+
+interface FollowUser {
+    id: number;
+    username: string;
+    email: string;
+    avatar?: string;
+}
 
 const Profil: React.FC = () => {
-    const [user, setUser] = useState({
-        id: null as number | null,
-        email: "",
-        username: "",
-        first_name: "",
-        last_name: "",
-        birth_date: null as string | null,
-        gender: null as string | null,
-        avatar: null as string | null,
-    });
-
-    const [avatarFile, setAvatarFile] = useState<File | null>(null);
-    const [posts, setPosts] = useState<Array<{
-        id: number;
-        description: string;
-        image: string | null;
-        likes_count: number;
-        comments_count: number;
-        liked: boolean;
-        showComments: boolean;
-        comments: Array<{ id: number; content: string; user: { id: number; username: string } }>;
-    }>>([]);
-
+    const [user, setUser] = useState<UserProfile | null>(null);
+    const [posts, setPosts] = useState<Post[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState<'posts' | 'about' | 'following' | 'followers'>('posts');
     const [commentInput, setCommentInput] = useState<{ [key: number]: string }>({});
     const [editingComment, setEditingComment] = useState<{ [key: number]: string }>({});
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [loadingComments, setLoadingComments] = useState<{ [key: number]: boolean }>({});
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
+    const [following, setFollowing] = useState<FollowUser[]>([]);
+    const [followers, setFollowers] = useState<FollowUser[]>([]);
+    const [followLoading, setFollowLoading] = useState<{ [key: number]: boolean }>({});
+    
     const navigate = useNavigate();
-    const token = localStorage.getItem("token");
 
-    useEffect(() => {
-        if (!token) return;
-
-        fetch("http://127.0.0.1:8000/api/profile/", {
-            headers: { Authorization: `Bearer ${token}` },
-        })
-            .then((res) => res.json())
-            .then((data) => {
-                if (!data.id) {
-                    setError("Impossible de récupérer l'ID utilisateur.");
-                    setLoading(false);
-                    return;
-                }
-
-                setUser({
-                    id: data.id,
-                    email: data.email,
-                    username: data.username,
-                    first_name: data.first_name,
-                    last_name: data.last_name,
-                    birth_date: data.birth_date,
-                    gender: data.gender,
-                    avatar: data.avatar ? `http://127.0.0.1:8000${data.avatar}` : "https://via.placeholder.com/150",
-                });
-
-                fetch(`http://127.0.0.1:8000/api/blog/user/${data.id}/`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                })
-                    .then((res) => res.json())
-                    .then((postsData) => {
-                        setPosts(postsData.map(post => ({
-                            ...post,
-                            liked: false,
-                            showComments: false,
-                            comments: [],
-                            image: post.image ? `http://127.0.0.1:8000${post.image}` : "https://via.placeholder.com/400"
-                        })));
-                        setLoading(false);
-                    })
-                    .catch(() => {
-                        setError("Erreur lors de la récupération des publications.");
-                        setLoading(false);
-                    });
-            })
-            .catch(() => {
-                setError("Erreur lors de la récupération du profil.");
-                setLoading(false);
-            });
-    }, []);
-
-    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            setAvatarFile(e.target.files[0]);
-        }
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('fr-FR', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
     };
 
-    const handleProfileUpdate = async () => {
-        if (!token || !avatarFile) return;
+    const getClassColor = (classe: string) => {
+        const colors = {
+            'Terminale': 'bg-red-100 text-red-800',
+            'Première': 'bg-blue-100 text-blue-800',
+            'Seconde': 'bg-green-100 text-green-800',
+            'Troisième': 'bg-yellow-100 text-yellow-800',
+            'Quatrième': 'bg-purple-100 text-purple-800',
+            'Cinquième': 'bg-pink-100 text-pink-800',
+        };
+        return colors[classe as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+    };
 
+    useEffect(() => {
+        const fetchUserData = async () => {
+            const token = localStorage.getItem("token");
+            console.log("🔍 Token récupéré:", token ? "✅ Présent" : "❌ Absent");
+            
+            if (!token) {
+                console.log("❌ Pas de token, redirection vers login");
+                navigate("/login");
+                return;
+            }
+
+            try {
+                console.log("📡 Tentative de récupération du profil...");
+                
+                // Récupérer le profil utilisateur
+                const profileResponse = await fetch(buildApiUrl(API_ENDPOINTS.AUTH.PROFILE), {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+
+                console.log("📡 Réponse profil:", profileResponse.status, profileResponse.statusText);
+
+                if (profileResponse.ok) {
+                    const profileData = await profileResponse.json();
+                    console.log("✅ Données profil récupérées:", profileData);
+                    
+                    setUser({
+                        id: profileData.id,
+                        username: profileData.username,
+                        email: profileData.email,
+                        first_name: profileData.first_name,
+                        last_name: profileData.last_name,
+                        // Utiliser la fonction buildMediaUrl pour gérer les avatars
+                        avatar: profileData.avatar ? buildMediaUrl(profileData.avatar) : undefined
+                    });
+
+                    console.log("📡 Tentative de récupération des posts...");
+                    
+                    // Récupérer les posts
+                    try {
+                        const postsResponse = await fetch(buildApiUrl(API_ENDPOINTS.BLOG.USER_POSTS(profileData.id)), {
+                            headers: { "Authorization": `Bearer ${token}` }
+                        });
+
+                        console.log("📡 Réponse posts:", postsResponse.status, postsResponse.statusText);
+
+                        if (postsResponse.ok) {
+                            const postsData = await postsResponse.json();
+                            console.log("✅ Posts récupérés:", postsData.length, "posts");
+                            
+                            const formattedPosts = postsData.map((post: any) => ({
+                                ...post,
+                                image: post.image ? buildMediaUrl(post.image) : null,
+                                liked: false,
+                                comments: [],
+                                showComments: false
+                            }));
+                            setPosts(formattedPosts);
+                        } else {
+                            console.log("⚠️ Erreur posts:", postsResponse.status);
+                            setPosts([]); // Définir un tableau vide en cas d'erreur
+                        }
+                    } catch (postsError) {
+                        console.error("❌ Erreur lors de la récupération des posts:", postsError);
+                        setPosts([]); // Définir un tableau vide en cas d'erreur
+                    }
+
+                    console.log("📡 Tentative de récupération des abonnements...");
+
+                    // Récupérer les abonnements et abonnés
+                    try {
+                        const followingResponse = await fetch(buildApiUrl(API_ENDPOINTS.USER.FOLLOWING), {
+                            headers: { "Authorization": `Bearer ${token}` }
+                        });
+
+                        const followersResponse = await fetch(buildApiUrl(API_ENDPOINTS.USER.FOLLOWERS), {
+                            headers: { "Authorization": `Bearer ${token}` }
+                        });
+
+                        console.log("📡 Réponse following:", followingResponse.status);
+                        console.log("📡 Réponse followers:", followersResponse.status);
+
+                        if (followingResponse.ok) {
+                            const followingData = await followingResponse.json();
+                            console.log("✅ Following récupéré:", followingData.length, "utilisateurs");
+                            
+                            setFollowing(followingData.map((user: any) => ({
+                                ...user,
+                                // Utiliser buildMediaUrl pour les avatars
+                                avatar: user.avatar ? buildMediaUrl(user.avatar) : undefined
+                            })));
+                        } else {
+                            console.log("⚠️ Erreur following:", followingResponse.status);
+                            setFollowing([]); // Définir un tableau vide en cas d'erreur
+                        }
+
+                        if (followersResponse.ok) {
+                            const followersData = await followersResponse.json();
+                            console.log("✅ Followers récupéré:", followersData.length, "utilisateurs");
+                            
+                            setFollowers(followersData.map((user: any) => ({
+                                ...user,
+                                // Utiliser buildMediaUrl pour les avatars
+                                avatar: user.avatar ? buildMediaUrl(user.avatar) : undefined
+                            })));
+                        } else {
+                            console.log("⚠️ Erreur followers:", followersResponse.status);
+                            setFollowers([]); // Définir un tableau vide en cas d'erreur
+                        }
+                    } catch (followError) {
+                        console.error("❌ Erreur lors de la récupération des abonnements:", followError);
+                        setFollowing([]);
+                        setFollowers([]);
+                    }
+                } else {
+                    console.log("❌ Erreur profil:", profileResponse.status, profileResponse.statusText);
+                    const errorData = await profileResponse.text();
+                    console.log("❌ Détails erreur:", errorData);
+                    
+                    // Si le token est invalide, rediriger vers login
+                    if (profileResponse.status === 401) {
+                        localStorage.removeItem("token");
+                        navigate("/login");
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error("❌ Erreur lors de la récupération des données:", error);
+                // En cas d'erreur de réseau, ne pas rediriger mais afficher une erreur
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchUserData();
+    }, [navigate]);
+
+    const handleAvatarChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        setUploadingAvatar(true);
         const formData = new FormData();
-        formData.append('avatar', avatarFile);
+        formData.append('avatar', file);
 
         try {
-            const response = await fetch("http://127.0.0.1:8000/api/profile/", {
+            const token = localStorage.getItem("token");
+            const response = await fetch(buildApiUrl(API_ENDPOINTS.AUTH.PROFILE), {
                 method: "PUT",
-                headers: {
-                    "Authorization": `Bearer ${token}`
-                },
+                headers: { "Authorization": `Bearer ${token}` },
                 body: formData
             });
 
             if (response.ok) {
-                const updatedUser = await response.json();
-                setUser(prevUser => ({ ...prevUser, avatar: `http://127.0.0.1:8000${updatedUser.avatar}` }));
-                setAvatarFile(null);
+                const data = await response.json();
+                setUser(prev => prev ? {
+                    ...prev,
+                    avatar: buildMediaUrl(data.avatar)
+                } : null);
             }
         } catch (error) {
-            console.error("Erreur lors de la mise à jour du profil :", error);
+            console.error("Erreur lors du changement d'avatar:", error);
+        } finally {
+            setUploadingAvatar(false);
         }
     };
 
-    const loadComments = async (postId: number) => {
+    const handleFollow = async (userId: number) => {
+        const token = localStorage.getItem("token");
         if (!token) return;
 
-        try {
-            const response = await fetch(`http://127.0.0.1:8000/api/blog/${postId}/comments/`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-
-            if (response.ok) {
-                const commentsData = await response.json();
-                setPosts((prevPosts) =>
-                    prevPosts.map((post) =>
-                        post.id === postId ? { ...post, comments: commentsData, showComments: true } : post
-                    )
-                );
-            }
-        } catch {
-            console.error("Erreur lors de la récupération des commentaires.");
-        }
-    };
-
-    const handleComment = async (postId: number) => {
-        if (!token || !commentInput[postId]) return;
+        setFollowLoading(prev => ({ ...prev, [userId]: true }));
 
         try {
-            const response = await fetch(`http://127.0.0.1:8000/api/blog/${postId}/comments/`, {
+            const response = await fetch(buildApiUrl(API_ENDPOINTS.USER.FOLLOW_TOGGLE(userId)), {
                 method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ content: commentInput[postId] }),
-            });
-
-            if (response.ok) {
-                const newComment = await response.json();
-                setPosts((prevPosts) =>
-                    prevPosts.map((post) =>
-                        post.id === postId
-                            ? { ...post, comments: [...post.comments, newComment], comments_count: post.comments_count + 1 }
-                            : post
-                    )
-                );
-                setCommentInput({ ...commentInput, [postId]: "" });
-            }
-        } catch {
-            console.error("Erreur lors de l'ajout du commentaire.");
-        }
-    };
-
-    const handleUpdateComment = async (postId: number, commentId: number) => {
-        if (!token || !editingComment[commentId]) return;
-
-        try {
-            const response = await fetch(`http://127.0.0.1:8000/api/blog/comments/${commentId}/update/`, {
-                method: "PUT",
-                headers: {
+                headers: { 
                     "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ content: editingComment[commentId] }),
+                    "Content-Type": "application/json"
+                }
             });
 
             if (response.ok) {
-                setPosts((prevPosts) =>
-                    prevPosts.map((post) =>
-                        post.id === postId
-                            ? {
-                                ...post,
-                                comments: post.comments.map((comment) =>
-                                    comment.id === commentId ? { ...comment, content: editingComment[commentId] } : comment
-                                ),
-                            }
-                            : post
-                    )
-                );
-                setEditingComment((prev) => {
-                    const updated = { ...prev };
-                    delete updated[commentId];
-                    return updated;
-                });
+                const data = await response.json();
+                
+                if (data.following) {
+                    // Utilisateur ajouté aux abonnements, le retirer de la liste
+                    setFollowing(prev => prev.filter(user => user.id !== userId));
+                } else {
+                    // Utilisateur retiré des abonnements
+                    setFollowing(prev => prev.filter(user => user.id !== userId));
+                }
             }
         } catch (error) {
-            console.error("Erreur lors de la modification du commentaire :", error);
+            console.error("Erreur lors du suivi/désuivi:", error);
+        } finally {
+            setFollowLoading(prev => ({ ...prev, [userId]: false }));
         }
     };
 
-    const handleDeleteComment = async (postId: number, commentId: number) => {
+    const handleDeletePost = async (postId: number) => {
+        const token = localStorage.getItem("token");
         if (!token) return;
 
+        if (!window.confirm("Êtes-vous sûr de vouloir supprimer cette publication ?")) {
+            return;
+        }
+
         try {
-            const response = await fetch(`http://127.0.0.1:8000/api/blog/comments/${commentId}/delete/`, {
+            const response = await fetch(buildApiUrl(API_ENDPOINTS.BLOG.POST_DETAIL(postId)), {
                 method: "DELETE",
-                headers: { "Authorization": `Bearer ${token}` },
+                headers: { "Authorization": `Bearer ${token}` }
             });
 
             if (response.ok) {
-                setPosts((prevPosts) =>
-                    prevPosts.map((post) =>
-                        post.id === postId
-                            ? { ...post, comments: post.comments.filter((comment) => comment.id !== commentId), comments_count: post.comments_count - 1 }
-                            : post
-                    )
-                );
+                setPosts(prev => prev.filter(post => post.id !== postId));
             }
         } catch (error) {
-            console.error("Erreur lors de la suppression du commentaire :", error);
+            console.error("Erreur lors de la suppression:", error);
         }
     };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-50">
+                <Sidebar />
+                <div className="lg:ml-72 flex items-center justify-center min-h-screen">
+                    <Loader2 className="w-12 h-12 animate-spin text-blue-500" />
+                </div>
+            </div>
+        );
+    }
+
+    if (!user) {
+        return (
+            <div className="min-h-screen bg-gray-50">
+                <Sidebar />
+                <div className="lg:ml-72 flex items-center justify-center min-h-screen">
+                    <div className="text-center">
+                        <h2 className="text-2xl font-bold text-gray-900 mb-4">Erreur</h2>
+                        <p className="text-gray-600">Impossible de charger le profil</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="profil-container">
+        <div className="min-h-screen bg-gray-50">
             <Sidebar />
-            <div className="profil-content">
-                {/* En-tête du profil */}
-                <div className="profil-header">
-                    <img className="profil-avatar" src={user.avatar} alt="Avatar" />
-
-                    <div className="avatar-upload-container">
-                        <div className="file-input-wrapper">
-                            <input
-                                type="file"
-                                id="avatar-upload"
-                                accept="image/*"
-                                onChange={handleAvatarChange}
-                            />
-                            <label htmlFor="avatar-upload" className="custom-file-button">
-                                <span className="icon">📁</span>
-                                Choisir une image
-                            </label>
-                        </div>
-
-                        {avatarFile && (
-                            <div className="file-name-display">
-                                {avatarFile.name}
-                            </div>
-                        )}
-
-                        <button
-                            className="update-avatar-btn"
-                            onClick={handleProfileUpdate}
-                            disabled={!avatarFile}
-                        >
-                            Mettre à jour l'avatar
-                        </button>
-                    </div>
-
-                    <h2 className="profil-username">{user.username}</h2>
-                    <div className="profil-info">
-                        {user.first_name && user.last_name && (
-                            <span className="info-item">
-                            <span className="info-icon">👤</span>
-                                {user.first_name} {user.last_name}
-                        </span>
-                        )}
-                        {user.birth_date && (
-                            <span className="info-item">
-                            <span className="info-icon">🎂</span>
-                                {user.birth_date}
-                        </span>
-                        )}
-                        {user.gender && (
-                            <span className="info-item">
-                            <span className="info-icon">⚧</span>
-                                {user.gender}
-                        </span>
-                        )}
-                    </div>
-                    <button className="profil-edit-btn" onClick={() => navigate("/editProfil")}>
-                        <span className="btn-icon">✏️</span>
-                        Modifier le profil
-                    </button>
-                </div>
-
-                {/* Section des publications */}
-                <div className="profil-posts">
-                    <h3>Publications</h3>
-
-                    {loading ? (
-                        <div className="loading-container">
-                            <div className="loading-spinner"></div>
-                            <p>Chargement des publications...</p>
-                        </div>
-                    ) : error ? (
-                        <p className="error-message">{error}</p>
-                    ) : posts.length === 0 ? (
-                        <div className="empty-posts">
-                            <div className="empty-icon">📝</div>
-                            <p>Aucune publication pour le moment.</p>
-                        </div>
-                    ) : (
-                        <div className="posts-grid">
-                            {posts.map(post => (
-                                <div key={post.id} className="post-card">
-                                    <div className="post-header">
-                                        <div className="post-author">
-                                            <img className="post-author-avatar" src={user.avatar} alt="Avatar" />
-                                            <span className="author-name">{user.username}</span>
-                                        </div>
-                                    </div>
-
-                                    <img className="post-image" src={post.image || "https://via.placeholder.com/400"} alt="Post" />
-
-                                    <p className="post-description">{post.description}</p>
-
-                                    <div className="post-actions">
-                                        <button
-                                            className={`comment-button ${post.showComments ? 'active' : ''}`}
-                                            onClick={() => loadComments(post.id)}
-                                        >
-                                            <span className="action-icon">💬</span>
-                                            <span className="action-count">{post.comments_count}</span>
-                                        </button>
-                                    </div>
-
-                                    {post.showComments && (
-                                        <div className="comment-section">
-                                            <h4 className="comments-title">Commentaires</h4>
-
-                                            {post.comments.length === 0 ? (
-                                                <p className="no-comments">Aucun commentaire. Soyez le premier à commenter !</p>
-                                            ) : (
-                                                <div className="comments-list">
-                                                    {post.comments.map((comment) => (
-                                                        <div key={comment.id} className="comment">
-                                                            <div className="comment-header">
-                                                                <strong className="comment-author">{comment.user.username}</strong>
-                                                            </div>
-
-                                                            {editingComment[comment.id] !== undefined ? (
-                                                                <div className="comment-edit-form">
-                                                                    <input
-                                                                        type="text"
-                                                                        className="comment-edit-input"
-                                                                        value={editingComment[comment.id]}
-                                                                        onChange={(e) =>
-                                                                            setEditingComment({ ...editingComment, [comment.id]: e.target.value })
-                                                                        }
-                                                                    />
-                                                                    <div className="comment-edit-actions">
-                                                                        <button
-                                                                            className="comment-save-btn"
-                                                                            onClick={() => handleUpdateComment(post.id, comment.id)}
-                                                                        >
-                                                                            💾 Enregistrer
-                                                                        </button>
-                                                                        <button
-                                                                            className="comment-cancel-btn"
-                                                                            onClick={() => {
-                                                                                const updated = { ...editingComment };
-                                                                                delete updated[comment.id];
-                                                                                setEditingComment(updated);
-                                                                            }}
-                                                                        >
-                                                                            ❌ Annuler
-                                                                        </button>
-                                                                    </div>
-                                                                </div>
-                                                            ) : (
-                                                                <div className="comment-content">
-                                                                    <p>{comment.content}</p>
-                                                                    {user && comment.user.id === user.id && (
-                                                                        <div className="comment-actions">
-                                                                            <button
-                                                                                className="comment-edit-btn"
-                                                                                onClick={() => setEditingComment({ ...editingComment, [comment.id]: comment.content })}
-                                                                            >
-                                                                                ✏️
-                                                                            </button>
-                                                                            <button
-                                                                                className="comment-delete-btn"
-                                                                                onClick={() => handleDeleteComment(post.id, comment.id)}
-                                                                            >
-                                                                                🗑️
-                                                                            </button>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-
-                                            <div className="comment-form">
-                                            <textarea
-                                                className="comment-input"
-                                                placeholder="Ajouter un commentaire..."
-                                                value={commentInput[post.id] || ""}
-                                                onChange={(e) => setCommentInput({ ...commentInput, [post.id]: e.target.value })}
-                                            />
-                                                <button
-                                                    className="send-comment"
-                                                    disabled={!commentInput[post.id]}
-                                                    onClick={() => handleComment(post.id)}
-                                                >
-                                                    Envoyer
-                                                </button>
-                                            </div>
+            
+            <div className="lg:ml-72 transition-all duration-300 ease-in-out">
+                {/* Cover & Profile Header */}
+                <div className="relative">
+                    {/* Cover Image */}
+                    <div className="h-64 bg-gradient-to-r from-blue-500 via-purple-600 to-pink-500"></div>
+                    
+                    {/* Profile Info */}
+                    <div className="relative px-6 pb-6">
+                        <div className="flex flex-col sm:flex-row sm:items-end sm:space-x-6">
+                            {/* Avatar */}
+                            <div className="relative -mt-20 mb-4 sm:mb-0">
+                                <div className="relative w-32 h-32 rounded-full border-4 border-white shadow-xl bg-white overflow-hidden">
+                                    {user.avatar ? (
+                                        <img
+                                            src={user.avatar}
+                                            alt="Avatar"
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+                                            <User className="w-16 h-16 text-white" />
                                         </div>
                                     )}
                                 </div>
+                                
+                                {/* Change Avatar Button */}
+                                <label className="absolute bottom-2 right-2 w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-700 transition-colors shadow-lg">
+                                    {uploadingAvatar ? (
+                                        <Loader2 className="w-5 h-5 text-white animate-spin" />
+                                    ) : (
+                                        <Camera className="w-5 h-5 text-white" />
+                                    )}
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleAvatarChange}
+                                        className="hidden"
+                                        disabled={uploadingAvatar}
+                                    />
+                                </label>
+                            </div>
+                            
+                            {/* User Info */}
+                            <div className="flex-1">
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                                    <div>
+                                        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                                            {user.first_name || user.last_name 
+                                                ? `${user.first_name || ''} ${user.last_name || ''}`.trim()
+                                                : user.username
+                                            }
+                                        </h1>
+                                        <p className="text-gray-600 flex items-center space-x-2 mb-2">
+                                            <span>@{user.username}</span>
+                                        </p>
+                                        <p className="text-gray-600 flex items-center space-x-2">
+                                            <Mail className="w-4 h-4" />
+                                            <span>{user.email}</span>
+                                        </p>
+                                    </div>
+                                    
+                                    <button
+                                        onClick={() => navigate('/profil/edit')}
+                                        className="mt-4 sm:mt-0 inline-flex items-center px-6 py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors"
+                                    >
+                                        <Settings className="w-5 h-5 mr-2" />
+                                        Modifier le profil
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Stats */}
+                <div className="px-6 mb-8">
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+                            <div className="text-center">
+                                <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-xl mb-3 mx-auto">
+                                    <FileText className="w-6 h-6 text-blue-600" />
+                                </div>
+                                <div className="text-2xl font-bold text-gray-900">{posts.length}</div>
+                                <div className="text-sm text-gray-500">Publications</div>
+                            </div>
+                            
+                            <div className="text-center">
+                                <div className="flex items-center justify-center w-12 h-12 bg-red-100 rounded-xl mb-3 mx-auto">
+                                    <Heart className="w-6 h-6 text-red-600" />
+                                </div>
+                                <div className="text-2xl font-bold text-gray-900">
+                                    {posts.reduce((total, post) => total + post.likes_count, 0)}
+                                </div>
+                                <div className="text-sm text-gray-500">Likes reçus</div>
+                            </div>
+                            
+                            <div className="text-center">
+                                <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-xl mb-3 mx-auto">
+                                    <UserPlus className="w-6 h-6 text-green-600" />
+                                </div>
+                                <div className="text-2xl font-bold text-gray-900">{following.length}</div>
+                                <div className="text-sm text-gray-500">Abonnements</div>
+                            </div>
+                            
+                            <div className="text-center">
+                                <div className="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-xl mb-3 mx-auto">
+                                    <Users className="w-6 h-6 text-purple-600" />
+                                </div>
+                                <div className="text-2xl font-bold text-gray-900">{followers.length}</div>
+                                <div className="text-sm text-gray-500">Abonnés</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Tabs */}
+                <div className="px-6 mb-8">
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-2">
+                        <div className="flex space-x-2">
+                            {[
+                                { key: 'posts', label: 'Publications', icon: FileText },
+                                { key: 'about', label: 'À propos', icon: User },
+                                { key: 'following', label: 'Abonnements', icon: UserPlus },
+                                { key: 'followers', label: 'Abonnés', icon: Users }
+                            ].map(({ key, label, icon: Icon }) => (
+                                <button
+                                    key={key}
+                                    onClick={() => setActiveTab(key as any)}
+                                    className={`flex items-center space-x-2 px-4 py-3 rounded-xl transition-colors flex-1 justify-center ${
+                                        activeTab === key
+                                            ? 'bg-blue-600 text-white'
+                                            : 'text-gray-600 hover:bg-gray-50'
+                                    }`}
+                                >
+                                    <Icon className="w-5 h-5" />
+                                    <span className="font-medium">{label}</span>
+                                </button>
                             ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Tab Content */}
+                <div className="px-6 pb-8">
+                    {activeTab === 'posts' && (
+                        <div className="space-y-6">
+                            {posts.length > 0 ? (
+                                posts.map((post) => (
+                                    <div key={post.id} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                                        <div className="p-8">
+                                            {/* Post Header */}
+                                            <div className="flex items-start justify-between mb-6">
+                                                <div className="flex items-center space-x-4">
+                                                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center overflow-hidden">
+                                                        {user.avatar ? (
+                                                            <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <User className="w-6 h-6 text-white" />
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="font-bold text-gray-900">{user.username}</h3>
+                                                        <div className="flex items-center space-x-3 mt-1">
+                                                            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getClassColor(post.classe)}`}>
+                                                                {post.classe}
+                                                            </span>
+                                                            <span className="text-sm text-gray-500">
+                                                                {formatDate(post.created_at)}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    onClick={() => handleDeletePost(post.id)}
+                                                    className="p-2 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors"
+                                                >
+                                                    <Trash2 className="w-5 h-5" />
+                                                </button>
+                                            </div>
+
+                                            {/* Post Content */}
+                                            <p className="text-gray-800 leading-relaxed mb-6">{post.description}</p>
+
+                                            {/* Post Image */}
+                                            {post.image && (
+                                                <div className="mb-6 rounded-xl overflow-hidden">
+                                                    <img
+                                                        src={post.image}
+                                                        alt="Post"
+                                                        className="w-full h-auto object-cover max-h-96"
+                                                    />
+                                                </div>
+                                            )}
+
+                                            {/* Post Stats */}
+                                            <div className="flex items-center space-x-6 pt-6 border-t border-gray-100">
+                                                <div className="flex items-center space-x-2 text-gray-600">
+                                                    <Heart className="w-5 h-5" />
+                                                    <span>{post.likes_count} likes</span>
+                                                </div>
+                                                <div className="flex items-center space-x-2 text-gray-600">
+                                                    <MessageCircle className="w-5 h-5" />
+                                                    <span>{post.comments_count} commentaires</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center">
+                                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <FileText className="w-8 h-8 text-gray-400" />
+                                    </div>
+                                    <h3 className="text-xl font-semibold text-gray-900 mb-2">Aucune publication</h3>
+                                    <p className="text-gray-600 mb-6">Vous n'avez pas encore publié de contenu</p>
+                                    <button
+                                        onClick={() => navigate('/blog')}
+                                        className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+                                    >
+                                        Créer ma première publication
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {activeTab === 'about' && (
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+                            <h2 className="text-2xl font-bold text-gray-900 mb-6">À propos</h2>
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="text-sm font-medium text-gray-700">Nom d'utilisateur</label>
+                                    <p className="mt-1 text-gray-900">{user.username}</p>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-700">Email</label>
+                                    <p className="mt-1 text-gray-900">{user.email}</p>
+                                </div>
+                                <div>
+                                    <label className="text-sm font-medium text-gray-700">Nom complet</label>
+                                    <p className="mt-1 text-gray-900">
+                                        {user.first_name || user.last_name 
+                                            ? `${user.first_name || ''} ${user.last_name || ''}`.trim()
+                                            : 'Non renseigné'
+                                        }
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'following' && (
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+                            <h2 className="text-2xl font-bold text-gray-900 mb-6">Mes abonnements ({following.length})</h2>
+                            {following.length > 0 ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {following.map((user) => (
+                                        <div key={user.id} className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-6 border border-gray-200 hover:shadow-md transition-all duration-200">
+                                            <div className="flex items-center space-x-4 mb-4">
+                                                <button
+                                                    onClick={() => navigate(`/profil/user/${user.id}`)}
+                                                    className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center hover:scale-105 transition-transform overflow-hidden"
+                                                >
+                                                    {user.avatar ? (
+                                                        <img
+                                                            src={user.avatar}
+                                                            alt={`Avatar de ${user.username}`}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <User className="w-8 h-8 text-white" />
+                                                    )}
+                                                </button>
+                                                <div className="flex-1 min-w-0">
+                                                    <button
+                                                        onClick={() => navigate(`/profil/user/${user.id}`)}
+                                                        className="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors block truncate"
+                                                    >
+                                                        {user.username}
+                                                    </button>
+                                                    <p className="text-sm text-gray-500 truncate">{user.email}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex space-x-3">
+                                                <button
+                                                    onClick={() => navigate(`/profil/user/${user.id}`)}
+                                                    className="flex-1 px-4 py-2 bg-blue-100 text-blue-600 hover:bg-blue-200 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center"
+                                                >
+                                                    <Eye className="w-4 h-4 mr-2" />
+                                                    Voir profil
+                                                </button>
+                                                <button
+                                                    onClick={() => handleFollow(user.id)}
+                                                    disabled={followLoading[user.id]}
+                                                    className="px-4 py-2 bg-red-100 text-red-600 hover:bg-red-200 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 flex items-center"
+                                                >
+                                                    {followLoading[user.id] ? (
+                                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                                    ) : (
+                                                        <>
+                                                            <UserMinus className="w-4 h-4 mr-1" />
+                                                            Ne plus suivre
+                                                        </>
+                                                    )}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-12">
+                                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <UserPlus className="w-8 h-8 text-gray-400" />
+                                    </div>
+                                    <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun abonnement</h3>
+                                    <p className="text-gray-600 mb-6">
+                                        Commencez à suivre d'autres utilisateurs pour voir leurs publications
+                                    </p>
+                                    <button
+                                        onClick={() => navigate('/blog')}
+                                        className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+                                    >
+                                        Découvrir des utilisateurs
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {activeTab === 'followers' && (
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+                            <h2 className="text-2xl font-bold text-gray-900 mb-6">Mes abonnés ({followers.length})</h2>
+                            {followers.length > 0 ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {followers.map((user) => (
+                                        <div key={user.id} className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-6 border border-gray-200 hover:shadow-md transition-all duration-200">
+                                            <div className="flex items-center space-x-4 mb-4">
+                                                <button
+                                                    onClick={() => navigate(`/profil/user/${user.id}`)}
+                                                    className="w-16 h-16 bg-gradient-to-r from-green-500 to-blue-600 rounded-full flex items-center justify-center hover:scale-105 transition-transform overflow-hidden"
+                                                >
+                                                    {user.avatar ? (
+                                                        <img
+                                                            src={user.avatar}
+                                                            alt={`Avatar de ${user.username}`}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <User className="w-8 h-8 text-white" />
+                                                    )}
+                                                </button>
+                                                <div className="flex-1 min-w-0">
+                                                    <button
+                                                        onClick={() => navigate(`/profil/user/${user.id}`)}
+                                                        className="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors block truncate"
+                                                    >
+                                                        {user.username}
+                                                    </button>
+                                                    <p className="text-sm text-gray-500 truncate">{user.email}</p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => navigate(`/profil/user/${user.id}`)}
+                                                className="w-full px-4 py-2 bg-green-100 text-green-600 hover:bg-green-200 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center"
+                                            >
+                                                <Eye className="w-4 h-4 mr-2" />
+                                                Voir profil
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-12">
+                                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <Users className="w-8 h-8 text-gray-400" />
+                                    </div>
+                                    <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun abonné</h3>
+                                    <p className="text-gray-600">
+                                        Partagez du contenu intéressant pour attirer des abonnés
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
             </div>
         </div>
     );
-}
+};
+
 export default Profil;

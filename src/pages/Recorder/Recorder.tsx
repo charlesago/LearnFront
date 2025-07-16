@@ -1,5 +1,8 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Mic, Square, Upload, FileAudio, Loader2 } from "lucide-react";
+import Sidebar from "../../components/Sidebar";
+import { buildApiUrl, API_ENDPOINTS } from "../../config/api";
 
 const Record: React.FC = () => {
     const [recording, setRecording] = useState(false);
@@ -20,28 +23,30 @@ const Record: React.FC = () => {
         mediaRecorder.current.onstop = async () => {
             setLoading(true);
             const audioBlob = new Blob(audioChunks.current, { type: "audio/wav" });
-            const audioFile = new File([audioBlob], "recording.wav", { type: "audio/wav" });
 
-            const formData = new FormData();
-            formData.append("audio", audioFile);
-
-            const response = await fetch("http://localhost:8000/api/upload-transcription/", {
-                method: "POST",
-                body: formData,
-            });
-
-            const data = await response.json();
+            const data = await uploadAudio(audioBlob);
             setLoading(false);
+            
             if (data.id && data.summary) {
-                navigate("/edit", {
+                // Vérifier que nous avons bien l'ID du fichier
+                if (!data.file_id) {
+                    console.error("❌ Erreur: ID du fichier manquant dans la réponse");
+                    alert("Une erreur est survenue lors de la création du fichier");
+                    return;
+                }
+
+                // Rediriger vers la page d'édition du fichier
+                navigate(`/file/${data.file_id}/edit`, {
                     state: {
+                        fileId: data.file_id,
                         transcriptionId: data.id,
                         summary: data.summary,
                         audioBlob: audioBlob,
                     },
                 });
             } else {
-                alert("Erreur de transcription.");
+                const errorMessage = data.error || "Erreur de transcription.";
+                alert(`❌ ${errorMessage}`);
             }
         };
 
@@ -62,6 +67,37 @@ const Record: React.FC = () => {
             {loading && <p>Transcription en cours...</p>}
         </div>
     );
+};
+
+const uploadAudio = async (audioBlob: Blob) => {
+    const formData = new FormData();
+    formData.append("audio", audioBlob, "recording.wav");
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+        throw new Error("Token non trouvé");
+    }
+
+    try {
+        const response = await fetch(buildApiUrl(API_ENDPOINTS.TRANSCRIPTION.UPLOAD), {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${token}`
+            },
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Erreur lors de l'upload");
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error("Erreur lors de l'upload :", error);
+        throw error;
+    }
 };
 
 export default Record;

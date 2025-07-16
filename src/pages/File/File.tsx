@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { FileText, Plus, MoreVertical, Edit, Trash, Search } from "lucide-react";
 import Sidebar from "../../components/Sidebar";
+import { buildApiUrl, API_ENDPOINTS } from "../../config/api";
 import "./file.css";
 
 const FilesPage: React.FC = () => {
@@ -14,59 +16,61 @@ const FilesPage: React.FC = () => {
     useEffect(() => {
         const token = localStorage.getItem("token");
         if (token && folderId) {
-            fetch(`http://127.0.0.1:8000/api/folders/${folderId}/files/`, {
+            fetch(buildApiUrl(API_ENDPOINTS.FOLDERS.FILES(parseInt(folderId))), {
                 headers: { "Authorization": `Bearer ${token}` },
             })
-                .then(res => res.json())
-                .then(data => {
-                    setFiles(data.map((file: any) => ({
-                        name: file.file.replace(/^\/media\//, ""),
-                        id: file.id
-                    })));
-                })
-                .catch(err => console.error("Erreur lors de la récupération des fichiers :", err));
+            .then(res => res.json())
+            .then(data => setFiles(data))
+            .catch(err => console.error("Erreur:", err));
         }
     }, [folderId]);
 
     const handleCreateFile = async () => {
-        const token = localStorage.getItem("token");
-        if (token && newFileName && folderId) {
-            try {
-                const response = await fetch(`http://127.0.0.1:8000/api/folders/${folderId}/create-file/`, {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${token}`,
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({ file_name: newFileName }),
-                });
-                if (response.ok) {
-                    setFiles([...files, { name: newFileName, id: Date.now() }]);
-                    setIsModalOpen(false);
-                    setNewFileName("");
-                } else {
-                    console.error("Erreur lors de la création du fichier");
-                }
-            } catch (error) {
-                console.error("Erreur lors de la création du fichier :", error);
-            }
-        }
-    };
+        if (!newFileName.trim() || !folderId) return;
 
-    const handleDeleteFile = async (fileId: number) => {
         const token = localStorage.getItem("token");
         if (!token) return;
 
         try {
-            await fetch(`http://127.0.0.1:8000/api/files/${fileId}/delete/`, {
+            const response = await fetch(buildApiUrl(API_ENDPOINTS.FOLDERS.CREATE_FILE(parseInt(folderId))), {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    name: newFileName,
+                    content: newFileContent
+                })
+            });
+
+            if (response.ok) {
+                const newFile = await response.json();
+                setFiles(prev => [...prev, newFile]);
+                setNewFileName("");
+                setNewFileContent("");
+                setShowCreateForm(false);
+            }
+        } catch (error) {
+            console.error("Erreur lors de la création:", error);
+        }
+    };
+
+    const handleDeleteFile = async (fileId: number) => {
+        if (!window.confirm("Êtes-vous sûr de vouloir supprimer ce fichier ?")) return;
+
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        try {
+            await fetch(buildApiUrl(API_ENDPOINTS.FILES.DETAIL(fileId)), {
                 method: "DELETE",
                 headers: { "Authorization": `Bearer ${token}` },
             });
 
-            setFiles(files.filter(file => file.id !== fileId));
-            setSelectedFileId(null);
+            setFiles(prev => prev.filter(file => file.id !== fileId));
         } catch (error) {
-            console.error("Erreur lors de la suppression du fichier :", error);
+            console.error("Erreur lors de la suppression:", error);
         }
     };
 

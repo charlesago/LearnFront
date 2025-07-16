@@ -2,3 +2,390 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Reset CSS et base styles */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+body {
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+  background-color: #f9fafb;
+  color: #1f2937;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Variables CSS pour le thème sombre - appliquées seulement avec la classe .dark */
+.dark {
+  --bg-primary: #0f172a;    /* slate-900 */
+  --bg-secondary: #1e293b;  /* slate-800 */
+  --bg-tertiary: #334155;   /* slate-700 */
+  --text-primary: #f1f5f9;  /* slate-100 */
+  --text-secondary: #e2e8f0; /* slate-200 */
+  --text-muted: #94a3b8;    /* slate-400 */
+  --border-color: #475569;  /* slate-600 */
+  --accent-blue: #3b82f6;   /* blue-500 */
+  --accent-purple: #8b5cf6; /* violet-500 */
+  --accent-green: #10b981;  /* emerald-500 */
+  --accent-orange: #f59e0b; /* amber-500 */
+}
+
+/* Thème sombre appliqué seulement avec la classe .dark */
+.dark body {
+  background-color: var(--bg-primary);
+  color: var(--text-secondary);
+}
+
+.dark #root {
+  background-color: var(--bg-primary);
+}
+
+/* Backgrounds */
+.dark .bg-white {
+  background-color: var(--bg-secondary) !important;
+}
+
+.dark .bg-gray-50 {
+  background-color: var(--bg-primary) !important;
+}
+
+.dark .bg-gray-100 {
+  background-color: var(--bg-secondary) !important;
+}
+
+.dark .bg-gray-200 {
+  background-color: var(--bg-tertiary) !important;
+}
+
+.dark .bg-blue-50 {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+}
+
+.dark .bg-green-50 {
+  background-color: rgba(16, 185, 129, 0.1) !important;
+}
+
+.dark .bg-purple-50 {
+  background-color: rgba(139, 92, 246, 0.1) !important;
+}
+
+.dark .bg-orange-50 {
+  background-color: rgba(245, 158, 11, 0.1) !important;
+}
+
+.dark .bg-red-50 {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+}
+
+.dark .bg-yellow-50 {
+  background-color: rgba(245, 158, 11, 0.1) !important;
+}
+
+/* Text Colors */
+.dark .text-gray-900 {
+  color: var(--text-primary) !important;
+}
+
+.dark .text-gray-800 {
+  color: var(--text-primary) !important;
+}
+
+.dark .text-gray-700 {
+  color: var(--text-secondary) !important;
+}
+
+.dark .text-gray-600 {
+  color: var(--text-muted) !important;
+}
+
+.dark .text-gray-500 {
+  color: var(--text-muted) !important;
+}
+
+.dark .text-gray-400 {
+  color: var(--text-muted) !important;
+}
+
+.dark .text-black {
+  color: var(--text-primary) !important;
+}
+
+/* Borders */
+.dark .border-gray-200 {
+  border-color: var(--border-color) !important;
+}
+
+.dark .border-gray-300 {
+  border-color: var(--border-color) !important;
+}
+
+.dark .border-gray-100 {
+  border-color: var(--border-color) !important;
+}
+
+.dark .border-white {
+  border-color: var(--border-color) !important;
+}
+
+/* Hover states */
+.dark .hover\:bg-gray-50:hover {
+  background-color: var(--bg-tertiary) !important;
+}
+
+.dark .hover\:bg-gray-100:hover {
+  background-color: var(--bg-tertiary) !important;
+}
+
+.dark .hover\:bg-white:hover {
+  background-color: var(--bg-tertiary) !important;
+}
+
+.dark .hover\:text-gray-800:hover {
+  color: var(--text-primary) !important;
+}
+
+.dark .hover\:text-gray-900:hover {
+  color: var(--text-primary) !important;
+}
+
+/* Focus states */
+.dark .focus\:bg-white:focus {
+  background-color: var(--bg-tertiary) !important;
+}
+
+.dark .focus\:border-gray-300:focus {
+  border-color: var(--accent-blue) !important;
+}
+
+/* Specific elements */
+.dark .shadow-sm {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3) !important;
+}
+
+.dark .shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2) !important;
+}
+
+.dark .shadow-xl {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2) !important;
+}
+
+.dark .shadow-2xl {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Cards et conteneurs spéciaux */
+.dark .rounded-xl,
+.dark .rounded-2xl,
+.dark .rounded-lg {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+/* Règles spécifiques pour les éléments qui peuvent rester blancs */
+.dark div[class*="bg-white"],
+.dark section[class*="bg-white"],
+.dark article[class*="bg-white"],
+.dark aside[class*="bg-white"],
+.dark header[class*="bg-white"],
+.dark footer[class*="bg-white"],
+.dark nav[class*="bg-white"] {
+  background-color: var(--bg-secondary) !important;
+}
+
+.dark div[class*="bg-gray-50"],
+.dark section[class*="bg-gray-50"],
+.dark article[class*="bg-gray-50"] {
+  background-color: var(--bg-primary) !important;
+}
+
+/* Sidebar spécifique */
+.dark .fixed.left-0.top-0.h-screen {
+  background-color: var(--bg-secondary) !important;
+}
+
+/* Modales et overlays */
+.dark .fixed.inset-0.bg-black {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Dropdowns et menus */
+.dark .absolute.z-10,
+.dark .absolute.z-20,
+.dark .absolute.z-30,
+.dark .absolute.z-40,
+.dark .absolute.z-50 {
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Tooltips */
+.dark .tooltip,
+.dark [role="tooltip"] {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Alerts et notifications */
+.dark .alert,
+.dark .notification {
+  background-color: var(--bg-secondary) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Tables */
+.dark table {
+  background-color: var(--bg-secondary) !important;
+}
+
+.dark th,
+.dark td {
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+}
+
+.dark thead {
+  background-color: var(--bg-tertiary) !important;
+}
+
+/* Progress bars */
+.dark .progress {
+  background-color: var(--bg-tertiary) !important;
+}
+
+/* Badges */
+.dark .badge {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Code blocks */
+.dark pre,
+.dark code {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Inputs et forms */
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--accent-blue) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3) !important;
+}
+
+/* Buttons */
+.dark button:not(.bg-blue-500):not(.bg-blue-600):not(.bg-green-500):not(.bg-red-500):not(.bg-purple-500):not(.bg-orange-500) {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.dark button:not(.bg-blue-500):not(.bg-blue-600):not(.bg-green-500):not(.bg-red-500):not(.bg-purple-500):not(.bg-orange-500):hover {
+  background-color: var(--bg-tertiary);
+}
+
+/* Scrollbars sombres pour le thème sombre */
+.dark ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: var(--border-color);
+}
+
+.dark p, .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+  color: var(--text-primary);
+}
+
+/* Éléments spécifiques qui peuvent rester blancs */
+.dark .text-white {
+  color: white !important; /* Garder le texte blanc quand c'est voulu */
+}
+
+.dark .bg-blue-500,
+.dark .bg-blue-600,
+.dark .bg-green-500,
+.dark .bg-red-500,
+.dark .bg-purple-500,
+.dark .bg-orange-500 {
+  /* Garder les couleurs d'accent */
+}
+
+/* Règle universelle pour capturer tous les éléments blancs */
+.dark * {
+  /* Convertir tous les backgrounds blancs */
+}
+
+.dark *:not(.text-white):not([class*="bg-blue"]):not([class*="bg-green"]):not([class*="bg-red"]):not([class*="bg-purple"]):not([class*="bg-orange"]):not([class*="bg-yellow"]):not([class*="bg-pink"]):not([class*="bg-indigo"]) {
+  /* Ne pas toucher aux couleurs d'accent */
+}
+
+/* Règle universelle agressive pour les backgrounds */
+.dark [style*="background-color: white"],
+.dark [style*="background-color: #fff"],
+.dark [style*="background-color: #ffffff"],
+.dark [style*="background-color: rgb(255, 255, 255)"] {
+  background-color: var(--bg-secondary) !important;
+}
+
+/* Règle pour les éléments inline avec style */
+.dark [style*="background: white"],
+.dark [style*="background: #fff"],
+.dark [style*="background: #ffffff"] {
+  background: var(--bg-secondary) !important;
+}
+
+img, picture, video, canvas, svg {
+  display: block;
+  max-width: 100%;
+}
+
+input, button, textarea, select {
+  font: inherit;
+}
+
+p, h1, h2, h3, h4, h5, h6 {
+  overflow-wrap: break-word;
+}
+
+#root {
+  isolation: isolate;
+  min-height: 100vh;
+}
+
+/* Animations et transitions fluides */
+* {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+

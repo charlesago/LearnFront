@@ -1,84 +1,112 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { GoogleAuthService } from "../../services/googleAuth";
+import { Loader2 } from "lucide-react";
+import { buildApiUrl, API_ENDPOINTS } from "../../config/api";
 import "./register.css";
 
 const Register: React.FC = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
+    const [googleLoading, setGoogleLoading] = useState(false);
     const [error, setError] = useState("");
     const navigate = useNavigate();
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        if (!validateForm()) return;
+        
         setLoading(true);
         setError("");
 
         try {
-            const response = await fetch("http://127.0.0.1:8000//api/register/", {
+            // Inscription
+            const registerResponse = await fetch(buildApiUrl(API_ENDPOINTS.AUTH.REGISTER), {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ email, password }),
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email,
+                    password,
+                })
             });
 
-            const data = await response.json();
+            if (registerResponse.ok) {
+                // Connexion automatique après inscription
+                const loginResponse = await fetch(buildApiUrl(API_ENDPOINTS.AUTH.LOGIN), {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password })
+                });
 
-            if (!response.ok) {
-                throw new Error(data.error || "Erreur lors de l'inscription");
-            }
-
-            console.log("✅ Inscription réussie ! Attente avant connexion...");
-
-            setTimeout(async () => {
-                try {
-                    const loginResponse = await fetch("http://127.0.0.1:8000//api/login/", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({ email, password }),
-                    });
-
-                    const loginData = await loginResponse.json();
-
-                    if (!loginResponse.ok) {
-                        throw new Error(loginData.error || "Erreur lors de la connexion après inscription");
-                    }
-
-                    if (!loginData.token) {
-                        throw new Error("Token JWT non reçu après connexion !");
-                    }
-
-                    localStorage.setItem("token", loginData.token);
-
+                if (loginResponse.ok) {
+                    const data = await loginResponse.json();
+                    localStorage.setItem("token", data.access);
                     navigate("/completeProfil");
-
-                } catch (err: any) {
-                    setError(err.message);
+                } else {
+                    navigate("/login");
                 }
-            }, 700);
-
-        } catch (err: any) {
-            setError(err.message);
+            } else {
+                const errorData = await registerResponse.json();
+                setError(errorData.message || "Erreur lors de l'inscription");
+            }
+        } catch (error) {
+            setError("Erreur de connexion. Veuillez réessayer.");
         } finally {
             setLoading(false);
         }
     };
 
+    const handleGoogleRegister = async () => {
+        setGoogleLoading(true);
+        setError("");
 
+        try {
+            // Rediriger vers Google pour l'authentification
+            await GoogleAuthService.redirectToGoogle();
+        } catch (err: unknown) {
+            console.error('Erreur Google Auth:', err);
+            setError(err instanceof Error ? err.message : "Erreur lors de l'inscription avec Google");
+            setGoogleLoading(false);
+        }
+    };
+
+    const validateForm = () => {
+        if (!email.trim()) {
+            setError("L'email est requis");
+            return false;
+        }
+        if (!password.trim()) {
+            setError("Le mot de passe est requis");
+            return false;
+        }
+        if (password.length < 6) {
+            setError("Le mot de passe doit contenir au moins 6 caractères");
+            return false;
+        }
+        return true;
+    };
 
     return (
         <div className="signup-container">
             <div className="signup-box">
                 <h2 className="signup-title">S'inscrire</h2>
-                <p className="signup-subtitle">Créez un compte pour commencer votre aventure d’apprentissage !</p>
+                <p className="signup-subtitle">Créez un compte pour commencer votre aventure d'apprentissage !</p>
 
                 {error && <p className="error-message">{error}</p>}
-                <button className="google-signup">
-                    <img src="../../../public/assets/google.png" alt="Google Icon" className="google-icon" />
-                    Se connecter avec Google
+                
+                <button 
+                    className="google-signup"
+                    onClick={handleGoogleRegister}
+                    disabled={googleLoading || loading}
+                >
+                    {googleLoading ? (
+                        <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                    ) : (
+                        <img src="/assets/google.png" alt="Google Icon" className="google-icon" />
+                    )}
+                    {googleLoading ? "Inscription..." : "S'inscrire avec Google"}
                 </button>
 
                 <div className="separator">
@@ -96,6 +124,7 @@ const Register: React.FC = () => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
+                        disabled={googleLoading}
                     />
 
                     <label className="label">Mot de Passe</label>
@@ -106,10 +135,15 @@ const Register: React.FC = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
+                        disabled={googleLoading}
                     />
 
-                    <button type="submit" className="signup-button" disabled={loading}>
-                        {loading ? "Inscription..." : "S’inscrire"}
+                    <button 
+                        type="submit" 
+                        className="signup-button" 
+                        disabled={loading || googleLoading}
+                    >
+                        {loading ? "Inscription..." : "S'inscrire"}
                     </button>
                 </form>
 

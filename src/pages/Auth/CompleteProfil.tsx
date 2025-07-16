@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./completeProfil.css";
+import { buildApiUrl, API_ENDPOINTS } from "../../config/api";
 
 const CompleteProfil: React.FC = () => {
     const [firstName, setFirstName] = useState("");
@@ -31,7 +32,7 @@ const CompleteProfil: React.FC = () => {
         }
 
         try {
-            const response = await fetch("http://127.0.0.1:8000/api/profile/", {
+            const response = await fetch(buildApiUrl(API_ENDPOINTS.AUTH.PROFILE), {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -57,9 +58,6 @@ const CompleteProfil: React.FC = () => {
             setLoading(false);
         }
     };
-
-
-
 
     return (
         <div className="profile-container">
@@ -92,7 +90,7 @@ const CompleteProfil: React.FC = () => {
                         required
                     />
 
-                    <label className="label">Nom d’utilisateur</label>
+                    <label className="label">Nom d'utilisateur</label>
                     <input
                         type="text"
                         className="input"
@@ -108,7 +106,7 @@ const CompleteProfil: React.FC = () => {
                 </form>
 
                 <p className="profile-info">
-                    Ces informations nous permettent d’adapter les fonctionnalités à vos besoins.
+                    Ces informations nous permettent d'adapter les fonctionnalités à vos besoins.
                 </p>
             </div>
         </div>
