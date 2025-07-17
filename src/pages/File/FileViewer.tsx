@@ -173,9 +173,27 @@ const FileViewer: React.FC = () => {
         }
     };
 
-    const handleShare = () => {
-        // TODO: Implémenter le partage
-        alert("Fonctionnalité Partage à venir ! 📤\n\nVous pourrez bientôt partager vos fichiers avec d'autres utilisateurs.");
+    const handleShare = async () => {
+        if (!fileData) {
+            alert("Impossible de partager : fichier non chargé");
+            return;
+        }
+
+        // Demander confirmation avant de créer le post
+        const confirmShare = window.confirm("Voulez-vous créer un nouveau post de blog avec ce fichier ?");
+        if (!confirmShare) return;
+
+        // Convertir le contenu du fichier en Blob pour pouvoir l'envoyer
+        const fileBlob = new Blob([fileData.content], { type: 'text/plain' });
+        const fileToUpload = new File([fileBlob], fileData.file_name, { type: 'text/plain' });
+
+        // Naviguer vers la page de création de post avec le fichier
+        navigate('/blog/new', {
+            state: {
+                fileToShare: fileToUpload,
+                fileContent: fileData.content
+            }
+        });
     };
 
     const formatDate = (dateString: string) => {

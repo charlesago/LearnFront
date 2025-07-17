@@ -14,7 +14,11 @@ import {
     Loader2,
     Image as ImageIcon,
     UserPlus,
-    UserMinus
+    UserMinus,
+    FolderOpen,
+    Download,
+    Eye,
+    FileText
 } from "lucide-react";
 import Sidebar from "../../components/Sidebar";
 import { buildApiUrl, buildMediaUrl, API_ENDPOINTS } from "../../config/api";
@@ -41,6 +45,12 @@ interface Post {
     showComments: boolean;
     comments: Comment[];
     created_at: string;
+    file?: {
+        url: string;
+        name: string;
+        size: number;
+        type: string;
+    } | null;
 }
 
 interface SearchUser {
@@ -63,6 +73,131 @@ const Blog: React.FC = () => {
     const [followLoading, setFollowLoading] = useState<{ [key: number]: boolean }>({});
     const [followingUserDetails, setFollowingUserDetails] = useState<{ [key: number]: { username: string; avatar?: string } }>({});
     const navigate = useNavigate();
+
+    // Ajouter un nouvel état pour la modal de fichier
+    const [selectedFile, setSelectedFile] = useState<{
+        name: string;
+        url: string;
+        type: string;
+    } | null>(null);
+
+    // État pour stocker le contenu du fichier
+    const [fileContent, setFileContent] = useState<string | null>(null);
+    const [folders, setFolders] = useState<{id: number, name: string}[]>([]);
+    const [selectedFolderId, setSelectedFolderId] = useState<number | null>(null);
+
+    const handleOpenFileModal = (fileUrl: string) => {
+        if (!fileUrl) return;
+
+        const token = localStorage.getItem("token");
+        const fullFileUrl = buildMediaUrl(fileUrl);
+
+        // Charger le contenu du fichier
+        fetch(fullFileUrl, {
+            headers: { 
+                "Authorization": `Bearer ${token}`,
+                "Accept": "text/plain"
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Impossible de charger le fichier");
+            }
+            return response.text();
+        })
+        .then(content => {
+            setFileContent(content);
+
+            // Charger la liste des dossiers
+            return fetch(buildApiUrl(API_ENDPOINTS.FOLDERS.LIST), {
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+        })
+        .then(response => response.json())
+        .then(foldersList => {
+            setFolders(foldersList);
+
+            // Définir le fichier pour la visualisation
+            const fileName = fileUrl.split('/').pop() || 'fichier';
+            setSelectedFile({
+                name: fileName,
+                url: fullFileUrl,
+                type: 'text/plain'
+            });
+        })
+        .catch(error => {
+            console.error("Erreur lors du chargement du fichier :", error);
+            alert("Impossible de charger le fichier. Vérifiez vos autorisations.");
+        });
+    };
+
+    const handleSaveFileToFolder = () => {
+        if (!selectedFile || !fileContent || !selectedFolderId) {
+            alert("Veuillez sélectionner un dossier");
+            return;
+        }
+
+        const token = localStorage.getItem("token");
+
+        // Générer un nom de fichier unique
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const originalName = selectedFile.name.split('.')[0];
+        const fileExtension = selectedFile.name.split('.').pop() || 'txt';
+        const generatedFileName = `${originalName}_${timestamp}.${fileExtension}`;
+
+        // Préparer les données pour l'envoi
+        const formData = new FormData();
+        formData.append('file_name', generatedFileName);
+        formData.append('content', fileContent);
+
+        fetch(
+            buildApiUrl(API_ENDPOINTS.FOLDERS.CREATE_FILE(selectedFolderId)), 
+            {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                },
+                body: formData
+            }
+        )
+        .then(async (response) => {
+            const contentType = response.headers.get("content-type");
+            const responseText = await response.text();
+
+            if (!response.ok) {
+                try {
+                    const errorData = JSON.parse(responseText);
+                    throw new Error(errorData.error || "Erreur lors de l'enregistrement du fichier");
+                } catch {
+                    throw new Error(responseText || "Erreur lors de l'enregistrement du fichier");
+                }
+            }
+
+            // Essayer de parser comme JSON, sinon utiliser le texte brut
+            try {
+                return contentType?.includes('application/json') 
+                    ? JSON.parse(responseText) 
+                    : responseText;
+            } catch {
+                return responseText;
+            }
+        })
+        .then(savedFile => {
+            // Gérer différents types de réponses
+            const fileName = typeof savedFile === 'object' 
+                ? (savedFile.name || generatedFileName)
+                : generatedFileName;
+
+            alert(`Fichier "${fileName}" enregistré avec succès dans votre dossier !`);
+            setSelectedFile(null);
+            setFileContent(null);
+            setSelectedFolderId(null);
+        })
+        .catch(error => {
+            console.error("Erreur lors de l'enregistrement du fichier :", error);
+            alert(error.message || "Erreur lors de l'enregistrement du fichier");
+        });
+    };
 
     // Fonction pour formater la date
     const formatDate = (dateString: string) => {
@@ -379,6 +514,24 @@ const Blog: React.FC = () => {
         );
     }
 
+    const getFileIcon = (type: string) => {
+        if (type.includes('image')) return <ImageIcon className="w-5 h-5 text-blue-500" />;
+        if (type.includes('pdf')) return <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-red-500"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>;
+        if (type.includes('doc') || type.includes('docx')) return <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-green-500"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>;
+        if (type.includes('xls') || type.includes('xlsx')) return <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-yellow-500"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>;
+        if (type.includes('zip') || type.includes('rar')) return <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-purple-500"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>;
+        return <FolderOpen className="w-5 h-5 text-gray-500" />;
+    };
+
+    const formatFileSize = (bytes: number, decimalPoint = 2) => {
+        if (bytes === 0) return "0 Bytes";
+        const k = 1024;
+        const dm = decimalPoint < 0 ? 0 : decimalPoint;
+        const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
+    };
+
     return (
         <div className="min-h-screen bg-gray-50">
             <Sidebar />
@@ -522,6 +675,30 @@ const Blog: React.FC = () => {
                                                         e.currentTarget.style.display = 'none';
                                                     }}
                                                 />
+                                            </div>
+                                        )}
+
+                                        {/* Dans la section de rendu des posts, ajouter un bouton pour visualiser le fichier */}
+                                        {post.file && (
+                                            <div className="mt-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 flex items-center justify-between">
+                                                <div className="flex items-center space-x-4">
+                                                    {getFileIcon(post.file.type || 'text/plain')}
+                                                    <div>
+                                                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate max-w-xs">
+                                                            {post.file.name || 'Fichier sans nom'}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                            {formatFileSize(post.file.size || 0)}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <button 
+                                                    onClick={() => handleOpenFileModal(post.file?.url || '')}
+                                                    className="inline-flex items-center px-4 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+                                                >
+                                                    <Eye className="w-5 h-5 mr-2" />
+                                                    Visualiser
+                                                </button>
                                             </div>
                                         )}
 
@@ -729,6 +906,79 @@ const Blog: React.FC = () => {
                                 ))}
                             </div>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {selectedFile && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-11/12 max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+                        <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white truncate max-w-[80%]">
+                                {selectedFile.name}
+                            </h2>
+                            <button 
+                                onClick={() => {
+                                    setSelectedFile(null);
+                                    setFileContent(null);
+                                }} 
+                                className="text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-white transition-colors rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+                        
+                        <div className="flex-grow overflow-auto p-6">
+                            {fileContent ? (
+                                <pre className="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg overflow-auto max-h-[70vh] whitespace-pre-wrap break-words font-mono text-sm text-gray-800 dark:text-gray-200">
+                                    {fileContent}
+                                </pre>
+                            ) : (
+                                <div className="flex items-center justify-center h-full">
+                                    <Loader2 className="w-12 h-12 animate-spin text-gray-500" />
+                                </div>
+                            )}
+                        </div>
+                        
+                        <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center space-x-4">
+                            <div className="flex items-center space-x-4 w-full">
+                                <select 
+                                    value={selectedFolderId || ''}
+                                    onChange={(e) => setSelectedFolderId(Number(e.target.value))}
+                                    className="flex-grow px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                >
+                                    <option value="">Sélectionner un dossier</option>
+                                    {folders.map(folder => (
+                                        <option key={folder.id} value={folder.id}>
+                                            {folder.name}
+                                        </option>
+                                    ))}
+                                </select>
+
+                                <div className="flex space-x-4">
+                                    <button 
+                                        onClick={() => {
+                                            const link = document.createElement('a');
+                                            link.href = URL.createObjectURL(new Blob([fileContent || ''], {type: 'text/plain'}));
+                                            link.download = selectedFile.name;
+                                            link.click();
+                                        }}
+                                        className="inline-flex items-center px-6 py-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+                                    >
+                                        <Download className="w-5 h-5 mr-2" />
+                                        Télécharger
+                                    </button>
+                                    <button 
+                                        onClick={handleSaveFileToFolder}
+                                        disabled={!selectedFolderId}
+                                        className="inline-flex items-center px-6 py-3 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-300 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        <FolderOpen className="w-5 h-5 mr-2" />
+                                        Enregistrer
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

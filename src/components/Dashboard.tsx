@@ -114,10 +114,17 @@ const Dashboard: React.FC = () => {
                         const errorMessage = data.error || "Erreur de transcription.";
                         alert(`❌ ${errorMessage}`);
                     }
-                } catch (error) {
+                } catch (error: unknown) {
                     console.error("Erreur lors de l'envoi de l'audio :", error);
                     setLoading(false);
-                    alert("❌ Erreur de connexion lors de la transcription. Vérifiez que le serveur backend est accessible.");
+                    
+                    // Vérifier si c'est une erreur réseau
+                    if (error instanceof TypeError && error.message.includes('fetch')) {
+                        alert("❌ Erreur de connexion. Vérifiez votre connexion internet.");
+                    } else {
+                        // Pour toute autre erreur, afficher un message générique
+                        alert(`❌ Erreur inattendue : ${error instanceof Error ? error.message : 'Impossible de traiter l\'enregistrement'}`);
+                    }
                 }
             };
 

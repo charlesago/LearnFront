@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, Upload, Image as ImageIcon, Send, X, Loader2, File, FileText, Download } from "lucide-react";
 import Sidebar from "../../components/Sidebar";
 import { buildApiUrl, API_ENDPOINTS } from "../../config/api";
@@ -14,6 +14,26 @@ const CreatePost: React.FC = () => {
     const [dragActive, setDragActive] = useState(false);
     const [fileDragActive, setFileDragActive] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
+
+    // Gérer le fichier partagé depuis FileViewer
+    useEffect(() => {
+        const sharedFile = location.state?.fileToShare;
+        const sharedFileContent = location.state?.fileContent;
+
+        if (sharedFile) {
+            setFile(sharedFile);
+            
+            // Pré-remplir la description avec un extrait du contenu
+            const previewContent = sharedFileContent ? 
+                (sharedFileContent.length > 200 ? 
+                    sharedFileContent.substring(0, 200) + '...' : 
+                    sharedFileContent
+                ) : '';
+            
+            setDescription(`Partage de fichier : ${sharedFile.name}\n\n${previewContent}`);
+        }
+    }, [location.state]);
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
