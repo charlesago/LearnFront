@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Reset CSS et base styles */
+/* Reset CSS and base styles */
 *, *::before, *::after {
   box-sizing: border-box;
 }
@@ -20,7 +20,7 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Variables CSS pour le thème sombre - appliquées seulement avec la classe .dark */
+/* Dark theme CSS variables - applied only when .dark class is present */
 .dark {
   --bg-primary: #0f172a;    /* slate-900 */
   --bg-secondary: #1e293b;  /* slate-800 */
@@ -35,7 +35,7 @@ body {
   --accent-orange: #f59e0b; /* amber-500 */
 }
 
-/* Thème sombre appliqué seulement avec la classe .dark */
+/* Dark theme applied only with the .dark class */
 .dark body {
   background-color: var(--bg-primary);
   color: var(--text-secondary);
@@ -179,7 +179,7 @@ body {
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4) !important;
 }
 
-/* Cards et conteneurs spéciaux */
+/* Cards and special containers */
 .dark .rounded-xl,
 .dark .rounded-2xl,
 .dark .rounded-lg {
@@ -187,7 +187,7 @@ body {
   border-color: var(--border-color);
 }
 
-/* Règles spécifiques pour les éléments qui peuvent rester blancs */
+/* Specific rules for elements that may stay white */
 .dark div[class*="bg-white"],
 .dark section[class*="bg-white"],
 .dark article[class*="bg-white"],
@@ -204,17 +204,17 @@ body {
   background-color: var(--bg-primary) !important;
 }
 
-/* Sidebar spécifique */
+/* Sidebar overrides */
 .dark .fixed.left-0.top-0.h-screen {
   background-color: var(--bg-secondary) !important;
 }
 
-/* Modales et overlays */
+/* Modals and overlays */
 .dark .fixed.inset-0.bg-black {
   background-color: rgba(0, 0, 0, 0.8) !important;
 }
 
-/* Dropdowns et menus */
+/* Dropdowns and menus */
 .dark .absolute.z-10,
 .dark .absolute.z-20,
 .dark .absolute.z-30,
@@ -231,7 +231,7 @@ body {
   color: var(--text-primary) !important;
 }
 
-/* Alerts et notifications */
+/* Alerts and notifications */
 .dark .alert,
 .dark .notification {
   background-color: var(--bg-secondary) !important;
@@ -271,7 +271,7 @@ body {
   color: var(--text-primary) !important;
 }
 
-/* Inputs et forms */
+/* Inputs and forms */
 .dark input,
 .dark textarea,
 .dark select {
@@ -305,7 +305,7 @@ body {
   background-color: var(--bg-tertiary);
 }
 
-/* Scrollbars sombres pour le thème sombre */
+/* Dark scrollbars for dark theme */
 .dark ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -328,38 +328,9 @@ body {
   color: var(--text-primary);
 }
 
-/* Éléments spécifiques qui peuvent rester blancs */
-.dark .text-white {
-  color: white !important; /* Garder le texte blanc quand c'est voulu */
-}
+/* Dark mode removed - app runs in light mode only */
 
-.dark .bg-blue-500,
-.dark .bg-blue-600,
-.dark .bg-green-500,
-.dark .bg-red-500,
-.dark .bg-purple-500,
-.dark .bg-orange-500 {
-  /* Garder les couleurs d'accent */
-}
-
-/* Règle universelle pour capturer tous les éléments blancs */
-.dark * {
-  /* Convertir tous les backgrounds blancs */
-}
-
-.dark *:not(.text-white):not([class*="bg-blue"]):not([class*="bg-green"]):not([class*="bg-red"]):not([class*="bg-purple"]):not([class*="bg-orange"]):not([class*="bg-yellow"]):not([class*="bg-pink"]):not([class*="bg-indigo"]) {
-  /* Ne pas toucher aux couleurs d'accent */
-}
-
-/* Règle universelle agressive pour les backgrounds */
-.dark [style*="background-color: white"],
-.dark [style*="background-color: #fff"],
-.dark [style*="background-color: #ffffff"],
-.dark [style*="background-color: rgb(255, 255, 255)"] {
-  background-color: var(--bg-secondary) !important;
-}
-
-/* Règle pour les éléments inline avec style */
+/* Rule for inline elements with background styles */
 .dark [style*="background: white"],
 .dark [style*="background: #fff"],
 .dark [style*="background: #ffffff"] {
@@ -384,7 +355,7 @@ p, h1, h2, h3, h4, h5, h6 {
   min-height: 100vh;
 }
 
-/* Animations et transitions fluides */
+/* Smooth animations and transitions */
 * {
   transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }

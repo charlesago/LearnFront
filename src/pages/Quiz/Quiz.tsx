@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Clock, CheckCircle, XCircle, Brain } from 'lucide-react';
+import { Clock, Brain } from 'lucide-react';
 import { API_ENDPOINTS, buildApiUrl } from '../../config/api';
 
 interface Answer {
@@ -44,7 +44,7 @@ const QuizPage: React.FC = () => {
     const [selectedAnswer, setSelectedAnswer] = useState<string>('');
     const [questionStartTime, setQuestionStartTime] = useState<number>(Date.now());
     const [quizStartTime, setQuizStartTime] = useState<number>(Date.now());
-    const [showResult, setShowResult] = useState(false);
+    
     const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
@@ -92,7 +92,7 @@ const QuizPage: React.FC = () => {
     const handleNextQuestion = () => {
         if (!selectedAnswer || submitting) return;
 
-        // Enregistrer la réponse
+    // Save the selected answer
         const timeSpent = Math.floor((Date.now() - questionStartTime) / 1000);
         const newAnswer: UserAnswer = {
             question_id: quiz!.questions[currentQuestionIndex].id,
@@ -103,11 +103,11 @@ const QuizPage: React.FC = () => {
         const updatedAnswers = [...userAnswers, newAnswer];
         setUserAnswers(updatedAnswers);
 
-        // Réinitialiser la sélection pour la prochaine question
+    // Reset selection for the next question
         setSelectedAnswer('');
         setQuestionStartTime(Date.now());
 
-        // Passer à la question suivante ou terminer
+    // Go to next question or submit if last
         if (currentQuestionIndex < quiz!.questions.length - 1) {
             setCurrentQuestionIndex(currentQuestionIndex + 1);
         } else {
@@ -135,7 +135,7 @@ const QuizPage: React.FC = () => {
 
             if (response.ok) {
                 const result = await response.json();
-                // Rediriger vers la page de résultats
+                // Redirect to results page
                 navigate(`/quiz/${quiz!.id}/result`, { 
                     state: { 
                         result: result.result,

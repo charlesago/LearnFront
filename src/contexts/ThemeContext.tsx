@@ -8,26 +8,19 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-    // Récupérer le thème depuis localStorage ou défaut à false
-    const savedTheme = localStorage.getItem('darkMode');
-    return savedTheme === 'true';
-  });
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
 
   useEffect(() => {
-    // Appliquer la classe dark au document
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    // Force light mode - remove dark class from document
+    document.documentElement.classList.remove('dark');
     
-    // Sauvegarder dans localStorage
-    localStorage.setItem('darkMode', isDarkMode.toString());
-  }, [isDarkMode]);
+    // Clean localStorage once on startup to avoid dark mode persistence
+    localStorage.removeItem('darkMode');
+  }, []); // Keep dependency array empty to run once
 
   const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
+    // No-op: always keep light mode
+    setIsDarkMode(false);
   };
 
   return (

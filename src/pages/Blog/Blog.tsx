@@ -4,7 +4,7 @@ import {
     Plus, 
     Heart, 
     MessageCircle, 
-    MoreVertical, 
+    
     Search, 
     User, 
     Send,
@@ -14,11 +14,10 @@ import {
     Loader2,
     Image as ImageIcon,
     UserPlus,
-    UserMinus,
+    
     FolderOpen,
     Download,
-    Eye,
-    FileText
+    Eye
 } from "lucide-react";
 import Sidebar from "../../components/Sidebar";
 import { buildApiUrl, buildMediaUrl, API_ENDPOINTS } from "../../config/api";
@@ -46,6 +45,7 @@ interface Post {
     comments: Comment[];
     created_at: string;
     file?: {
+        id: number;
         url: string;
         name: string;
         size: number;
@@ -71,63 +71,70 @@ const Blog: React.FC = () => {
     const [loadingComments, setLoadingComments] = useState<{ [key: number]: boolean }>({});
     const [followingUsers, setFollowingUsers] = useState<Set<number>>(new Set());
     const [followLoading, setFollowLoading] = useState<{ [key: number]: boolean }>({});
-    const [followingUserDetails, setFollowingUserDetails] = useState<{ [key: number]: { username: string; avatar?: string } }>({});
     const navigate = useNavigate();
 
-    // Ajouter un nouvel état pour la modal de fichier
+    // Add state for the file modal
     const [selectedFile, setSelectedFile] = useState<{
         name: string;
         url: string;
         type: string;
     } | null>(null);
 
-    // État pour stocker le contenu du fichier
+    // State to store the loaded file content
     const [fileContent, setFileContent] = useState<string | null>(null);
     const [folders, setFolders] = useState<{id: number, name: string}[]>([]);
     const [selectedFolderId, setSelectedFolderId] = useState<number | null>(null);
 
-    const handleOpenFileModal = (fileUrl: string) => {
-        if (!fileUrl) return;
+    const handleOpenFileModal = (fileId: number, fileName: string) => {
+        if (!fileId) return;
 
-        const token = localStorage.getItem("token");
-        const fullFileUrl = buildMediaUrl(fileUrl);
+        console.log("Ouverture du fichier ID:", fileId, "Nom:", fileName);
+        
+        // Open modal immediately
+        setSelectedFile({
+            name: fileName,
+            url: `${fileId}`, // On utilise l'ID comme identifiant
+            type: 'text/plain'
+        });
 
-        // Charger le contenu du fichier
-        fetch(fullFileUrl, {
+        // Reset previous content
+        setFileContent(null);
+
+        // Load file content using existing endpoint /api/files/{file_id}/
+        const authToken = localStorage.getItem("token");
+        fetch(buildApiUrl(API_ENDPOINTS.FILES.DETAIL(fileId)), {
             headers: { 
-                "Authorization": `Bearer ${token}`,
-                "Accept": "text/plain"
+                "Authorization": `Bearer ${authToken}`,
+                "Accept": "application/json"
             }
         })
         .then(response => {
+            console.log("Server response:", response.status, response.statusText);
             if (!response.ok) {
-                throw new Error("Impossible de charger le fichier");
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
             }
-            return response.text();
+            return response.json();
         })
-        .then(content => {
-            setFileContent(content);
+        .then(data => {
+            console.log("Content loaded successfully, length:", data.content?.length || 0);
+            setFileContent(data.content || "Contenu vide");
+        })
+        .catch(error => {
+            console.error("Detailed error while loading file:", error);
+            setFileContent(`ERREUR DE CHARGEMENT:\n\nFile ID: ${fileId}\nErreur: ${error.message}\n\nVérifiez la console pour plus de détails.`);
+        });
 
-            // Charger la liste des dossiers
-            return fetch(buildApiUrl(API_ENDPOINTS.FOLDERS.LIST), {
-                headers: { "Authorization": `Bearer ${token}` }
-            });
+        // Load folders list in parallel
+        const token = localStorage.getItem("token");
+        fetch(buildApiUrl(API_ENDPOINTS.FOLDERS.LIST), {
+            headers: { "Authorization": `Bearer ${token}` }
         })
         .then(response => response.json())
         .then(foldersList => {
             setFolders(foldersList);
-
-            // Définir le fichier pour la visualisation
-            const fileName = fileUrl.split('/').pop() || 'fichier';
-            setSelectedFile({
-                name: fileName,
-                url: fullFileUrl,
-                type: 'text/plain'
-            });
         })
         .catch(error => {
-            console.error("Erreur lors du chargement du fichier :", error);
-            alert("Impossible de charger le fichier. Vérifiez vos autorisations.");
+            console.error("Error while loading folders:", error);
         });
     };
 
@@ -139,25 +146,27 @@ const Blog: React.FC = () => {
 
         const token = localStorage.getItem("token");
 
-        // Générer un nom de fichier unique
+    // Generate a unique filename
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
         const originalName = selectedFile.name.split('.')[0];
         const fileExtension = selectedFile.name.split('.').pop() || 'txt';
         const generatedFileName = `${originalName}_${timestamp}.${fileExtension}`;
 
-        // Préparer les données pour l'envoi
-        const formData = new FormData();
-        formData.append('file_name', generatedFileName);
-        formData.append('content', fileContent);
+    // Prepare JSON payload
+        const requestData = {
+            file_name: generatedFileName,
+            content: fileContent
+        };
 
         fetch(
             buildApiUrl(API_ENDPOINTS.FOLDERS.CREATE_FILE(selectedFolderId)), 
             {
                 method: "POST",
                 headers: {
-                    "Authorization": `Bearer ${token}`
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json"
                 },
-                body: formData
+                body: JSON.stringify(requestData)
             }
         )
         .then(async (response) => {
@@ -173,7 +182,7 @@ const Blog: React.FC = () => {
                 }
             }
 
-            // Essayer de parser comme JSON, sinon utiliser le texte brut
+            // Try to parse as JSON, otherwise return raw text
             try {
                 return contentType?.includes('application/json') 
                     ? JSON.parse(responseText) 
@@ -183,7 +192,7 @@ const Blog: React.FC = () => {
             }
         })
         .then(savedFile => {
-            // Gérer différents types de réponses
+            // Handle both JSON or text responses
             const fileName = typeof savedFile === 'object' 
                 ? (savedFile.name || generatedFileName)
                 : generatedFileName;
@@ -194,7 +203,7 @@ const Blog: React.FC = () => {
             setSelectedFolderId(null);
         })
         .catch(error => {
-            console.error("Erreur lors de l'enregistrement du fichier :", error);
+            console.error("Error while saving file:", error);
             alert(error.message || "Erreur lors de l'enregistrement du fichier");
         });
     };
@@ -214,14 +223,14 @@ const Blog: React.FC = () => {
     useEffect(() => {
         const token = localStorage.getItem("token");
         if (token) {
-            // Récupérer le profil de l'utilisateur connecté
+            // Fetch the connected user's profile
             fetch(buildApiUrl(API_ENDPOINTS.AUTH.PROFILE), {
                 headers: { "Authorization": `Bearer ${token}` },
             })
             .then(res => res.json())
             .then(data => setCurrentUser(data));
 
-            // Récupérer tous les posts
+            // Fetch all posts
             fetch(buildApiUrl(API_ENDPOINTS.BLOG.LIST), {
                 headers: { "Authorization": `Bearer ${token}` },
             })
@@ -234,7 +243,7 @@ const Blog: React.FC = () => {
                 }));
                 setPosts(postsWithProcessedData);
 
-                // Charger les likes pour chaque post
+                // Load likes for each post
                 postsWithProcessedData.forEach((post: any) => {
                     fetch(buildApiUrl(API_ENDPOINTS.BLOG.LIKE(post.id)), {
                         headers: { "Authorization": `Bearer ${token}` },
@@ -245,13 +254,13 @@ const Blog: React.FC = () => {
                             p.id === post.id ? { ...p, liked: likeData.user_has_liked, likes_count: likeData.likes_count } : p
                         ));
                     })
-                    .catch(error => console.error("Erreur lors du chargement des likes:", error));
+                    .catch(error => console.error("Error while loading likes:", error));
                 });
                 
                 setLoading(false);
             })
             .catch(error => {
-                console.error("Erreur lors du chargement des posts:", error);
+                console.error("Error while loading posts:", error);
                 setLoading(false);
             });
         } else {
@@ -466,7 +475,7 @@ const Blog: React.FC = () => {
         setFollowLoading(prev => ({ ...prev, [userId]: false }));
     };
 
-    // Vérifier les relations de follow au chargement
+    // Check following relationships on mount
     useEffect(() => {
         const token = localStorage.getItem("token");
         if (!token || !currentUser || posts.length === 0) return;
@@ -488,7 +497,7 @@ const Blog: React.FC = () => {
                             }
                         }
                     } catch (error) {
-                        console.error("Erreur lors de la vérification du follow :", error);
+                        console.error("Error while checking follow:", error);
                     }
                 }
             }
@@ -540,12 +549,12 @@ const Blog: React.FC = () => {
             <div className="lg:ml-72 transition-all duration-300 ease-in-out">
                 <div className="p-6 lg:p-8">
                     {/* Header */}
-                    <div className="flex items-center justify-between mb-8">
-                        <div>
+                    <div className="flex items-start md:items-center justify-between mb-8 flex-col md:flex-row gap-4">
+                        <div className="w-full md:w-auto">
                             <h1 className="text-3xl font-bold text-gray-900">Blog</h1>
                             <p className="text-gray-600 mt-1">Partagez vos connaissances avec la communauté</p>
                         </div>
-                        <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-4 self-stretch md:self-auto">
                             <button
                                 onClick={() => setShowModal(true)}
                                 className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
@@ -680,11 +689,11 @@ const Blog: React.FC = () => {
 
                                         {/* Dans la section de rendu des posts, ajouter un bouton pour visualiser le fichier */}
                                         {post.file && (
-                                            <div className="mt-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 flex items-center justify-between">
-                                                <div className="flex items-center space-x-4">
+                                            <div className="mt-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 flex items-center justify-between flex-wrap gap-3">
+                                                <div className="flex items-center space-x-4 min-w-0">
                                                     {getFileIcon(post.file.type || 'text/plain')}
-                                                    <div>
-                                                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate max-w-xs">
+                                                    <div className="min-w-0">
+                                                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate max-w-xs sm:max-w-sm">
                                                             {post.file.name || 'Fichier sans nom'}
                                                         </p>
                                                         <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -693,7 +702,7 @@ const Blog: React.FC = () => {
                                                     </div>
                                                 </div>
                                                 <button 
-                                                    onClick={() => handleOpenFileModal(post.file?.url || '')}
+                                                    onClick={() => handleOpenFileModal(post.file?.id || 0, post.file?.name || 'fichier')}
                                                     className="inline-flex items-center px-4 py-2 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
                                                 >
                                                     <Eye className="w-5 h-5 mr-2" />
@@ -941,11 +950,11 @@ const Blog: React.FC = () => {
                         </div>
                         
                         <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center space-x-4">
-                            <div className="flex items-center space-x-4 w-full">
+                            <div className="flex items-center space-x-4 w-full flex-wrap gap-3">
                                 <select 
                                     value={selectedFolderId || ''}
                                     onChange={(e) => setSelectedFolderId(Number(e.target.value))}
-                                    className="flex-grow px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                    className="flex-grow min-w-[200px] px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                                 >
                                     <option value="">Sélectionner un dossier</option>
                                     {folders.map(folder => (
@@ -955,12 +964,12 @@ const Blog: React.FC = () => {
                                     ))}
                                 </select>
 
-                                <div className="flex space-x-4">
+                                <div className="flex space-x-4 flex-wrap gap-3">
                                     <button 
                                         onClick={() => {
                                             const link = document.createElement('a');
                                             link.href = URL.createObjectURL(new Blob([fileContent || ''], {type: 'text/plain'}));
-                                            link.download = selectedFile.name;
+                                            link.download = selectedFile?.name || 'fichier.txt';
                                             link.click();
                                         }}
                                         className="inline-flex items-center px-6 py-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-300 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"

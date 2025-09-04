@@ -15,11 +15,7 @@ import {
     Loader2,
     CheckCircle,
     RotateCcw,
-    X,
-    Zap,
-    Sparkles,
-    Flame,
-    Settings
+    X
 } from "lucide-react";
 import { API_ENDPOINTS, buildApiUrl } from "../../config/api";
 import Sidebar from "../../components/Sidebar";
@@ -45,6 +41,19 @@ const FileViewer: React.FC = () => {
     const [showPowerModal, setShowPowerModal] = useState(false);
     const [modalType, setModalType] = useState<'quiz' | 'review'>('quiz');
     const [selectedPower, setSelectedPower] = useState<'low' | 'medium' | 'high'>('medium');
+
+    // Load app preferences (AI power and auto quiz/review)
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem('appPreferences');
+            if (saved) {
+                const prefs = JSON.parse(saved);
+                if (prefs.aiPower && ['low','medium','high'].includes(prefs.aiPower)) {
+                    setSelectedPower(prefs.aiPower);
+                }
+            }
+        } catch {}
+    }, []);
 
     const token = localStorage.getItem("token");
 
@@ -109,7 +118,9 @@ const FileViewer: React.FC = () => {
             setCreatingQuiz(true);
 
             try {
-                const response = await fetch(buildApiUrl(API_ENDPOINTS.QUIZ.CREATE_FROM_FILE), {
+        const saved = localStorage.getItem('appPreferences');
+        const prefs = saved ? JSON.parse(saved) : {};
+        const response = await fetch(buildApiUrl(API_ENDPOINTS.QUIZ.CREATE_FROM_FILE), {
                     method: "POST",
                     headers: {
                         "Authorization": `Bearer ${token}`,
@@ -117,9 +128,9 @@ const FileViewer: React.FC = () => {
                     },
                     body: JSON.stringify({
                         file_id: parseInt(fileId),
-                        difficulty: 'medium',
-                        num_questions: 10,
-                        ai_power: selectedPower
+            difficulty: prefs.defaultDifficulty || 'medium',
+            num_questions: prefs.defaultQuestions || 10,
+            ai_power: prefs.aiPower || selectedPower
                     }),
                 });
 
@@ -144,7 +155,9 @@ const FileViewer: React.FC = () => {
             setCreatingReviewCards(true);
 
             try {
-                const response = await fetch(buildApiUrl(API_ENDPOINTS.REVIEW.CREATE_FROM_FILE), {
+        const saved = localStorage.getItem('appPreferences');
+        const prefs = saved ? JSON.parse(saved) : {};
+        const response = await fetch(buildApiUrl(API_ENDPOINTS.REVIEW.CREATE_FROM_FILE), {
                     method: "POST",
                     headers: {
                         "Authorization": `Bearer ${token}`,
@@ -152,8 +165,8 @@ const FileViewer: React.FC = () => {
                     },
                     body: JSON.stringify({
                         file_id: parseInt(fileId),
-                        num_cards: 15,
-                        ai_power: selectedPower
+            num_cards: prefs.defaultQuestions || 15,
+            ai_power: prefs.aiPower || selectedPower
                     }),
                 });
 
@@ -179,15 +192,15 @@ const FileViewer: React.FC = () => {
             return;
         }
 
-        // Demander confirmation avant de créer le post
+    // Ask for confirmation before creating the post
         const confirmShare = window.confirm("Voulez-vous créer un nouveau post de blog avec ce fichier ?");
         if (!confirmShare) return;
 
-        // Convertir le contenu du fichier en Blob pour pouvoir l'envoyer
+    // Convert file content to a Blob to upload
         const fileBlob = new Blob([fileData.content], { type: 'text/plain' });
         const fileToUpload = new File([fileBlob], fileData.file_name, { type: 'text/plain' });
 
-        // Naviguer vers la page de création de post avec le fichier
+    // Navigate to the create post page with the file
         navigate('/blog/new', {
             state: {
                 fileToShare: fileToUpload,
@@ -259,15 +272,15 @@ const FileViewer: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
             <Sidebar />
             
             {/* Main Content */}
             <div className="lg:ml-72 transition-all duration-300 ease-in-out">
-                <div className="p-6 lg:p-8">
+                <div className="p-4 sm:p-6 lg:p-8">
                     {/* Header */}
-                    <div className="flex items-center justify-between mb-8">
-                        <div className="flex items-center space-x-4">
+                    <div className="flex items-start md:items-center justify-between mb-8 flex-col md:flex-row gap-4">
+                        <div className="flex items-center space-x-4 w-full md:w-auto min-w-0">
                             <button
                                 onClick={() => currentFolder ? navigate(`/folder/${currentFolder}`) : navigate('/dashboard')}
                                 className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
@@ -275,14 +288,14 @@ const FileViewer: React.FC = () => {
                                 <ArrowLeft className="w-4 h-4 mr-2" />
                                 Retour
                             </button>
-                            <div>
-                                <h1 className="text-3xl font-bold text-gray-900">{fileData.file_name}</h1>
+                            <div className="min-w-0">
+                                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 break-words max-w-[80vw] md:max-w-none">{fileData.file_name}</h1>
                                 <p className="text-gray-600 mt-1">Visualisation du fichier</p>
                             </div>
                         </div>
                         
                         {/* Action Buttons */}
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center gap-3 flex-wrap w-full md:w-auto">
                             <button
                                 onClick={handleQuiz}
                                 disabled={creatingQuiz}
@@ -324,12 +337,12 @@ const FileViewer: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
+                    <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 sm:gap-8">
                         {/* Main Content */}
                         <div className="xl:col-span-3">
                             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                                 {/* Content Header */}
-                                <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                                <div className="px-4 sm:px-6 py-4 border-b border-gray-200 bg-gray-50">
                                     <div className="flex items-center justify-between">
                                         <h2 className="text-lg font-semibold text-gray-900 flex items-center">
                                             <Eye className="w-5 h-5 mr-2 text-blue-500" />
@@ -368,9 +381,9 @@ const FileViewer: React.FC = () => {
                                 </div>
 
                                 {/* Content Body */}
-                                <div className="p-6">
+                <div className="p-4 sm:p-6">
                                     <div className="prose max-w-none">
-                                        <div className="whitespace-pre-wrap text-gray-800 leading-relaxed">
+                    <div className="whitespace-pre-wrap break-words text-gray-800 leading-relaxed text-sm sm:text-base">
                                             {fileData.content}
                                         </div>
                                     </div>
@@ -487,14 +500,14 @@ const FileViewer: React.FC = () => {
                 </div>
             </div>
 
-            {/* Modale de sélection de puissance IA - VERSION SIMPLIFIÉE */}
+            {/* AI power selection modal - simplified version */}
             {showPowerModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
                     <div className="bg-slate-800 rounded-xl shadow-2xl max-w-sm w-full border border-slate-600">
                         {/* Header */}
                         <div className="flex items-center justify-between p-6 border-b border-slate-600">
                             <h3 className="text-xl font-semibold text-white">
-                                {modalType === 'quiz' ? '🧠 Créer Quiz' : '📚 Créer Révision'}
+                                {modalType === 'quiz' ? 'Créer Quiz' : 'Créer Révision'}
                             </h3>
                             <button
                                 onClick={() => setShowPowerModal(false)}
@@ -510,7 +523,7 @@ const FileViewer: React.FC = () => {
                                 Choisissez la puissance de l'IA
                             </p>
 
-                            {/* Options simplifiées */}
+                            {/* Simplified options */}
                             <div className="space-y-3 mb-6">
                                 <button
                                     onClick={() => setSelectedPower('low')}
@@ -521,7 +534,7 @@ const FileViewer: React.FC = () => {
                                     }`}
                                 >
                                     <div className="flex items-center space-x-3">
-                                        <span className="text-2xl">⚡</span>
+                                        <span className="text-2xl">Low</span>
                                         <div>
                                             <div className="font-medium">Rapide</div>
                                             <div className="text-sm opacity-75">~30 secondes</div>
@@ -538,7 +551,7 @@ const FileViewer: React.FC = () => {
                                     }`}
                                 >
                                     <div className="flex items-center space-x-3">
-                                        <span className="text-2xl">✨</span>
+                                        <span className="text-2xl">Medium</span>
                                         <div>
                                             <div className="font-medium">Équilibré</div>
                                             <div className="text-sm opacity-75">~1 minute</div>
@@ -555,7 +568,7 @@ const FileViewer: React.FC = () => {
                                     }`}
                                 >
                                     <div className="flex items-center space-x-3">
-                                        <span className="text-2xl">🔥</span>
+                                        <span className="text-2xl">High</span>
                                         <div>
                                             <div className="font-medium">Puissant</div>
                                             <div className="text-sm opacity-75">~2 minutes</div>

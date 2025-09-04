@@ -1,4 +1,4 @@
-// Service pour l'authentification Google OAuth2
+// Service for Google OAuth2 authentication
 
 import { API_ENDPOINTS, buildApiUrl } from '../config/api';
 
@@ -17,7 +17,7 @@ export interface GoogleAuthResponse {
 
 export class GoogleAuthService {
   /**
-   * Initie le processus d'authentification Google
+   * Initiates Google authentication flow
    */
   static async initiateGoogleAuth(): Promise<string> {
     try {
@@ -29,7 +29,7 @@ export class GoogleAuthService {
       });
 
       if (!response.ok) {
-        throw new Error('Erreur lors de l\'initialisation de l\'authentification Google');
+  throw new Error('Erreur lors de l\'initialisation de l\'authentification Google');
       }
 
       const data = await response.json();
@@ -41,7 +41,7 @@ export class GoogleAuthService {
   }
 
   /**
-   * Traite le code d'autorisation reçu de Google
+   * Handles the authorization code returned by Google
    */
   static async handleGoogleCallback(code: string): Promise<GoogleAuthResponse> {
     try {
@@ -67,14 +67,14 @@ export class GoogleAuthService {
   }
 
   /**
-   * Ouvre une popup pour l'authentification Google
+   * Opens a popup window for Google authentication
    */
   static async authenticateWithGoogle(): Promise<GoogleAuthResponse> {
     try {
-      // Obtenir l'URL d'autorisation Google
+  // Get Google authorization URL
       const authUrl = await this.initiateGoogleAuth();
       
-      // Ouvrir une popup avec l'URL d'autorisation
+  // Open a popup with the authorization URL
       const popup = window.open(
         authUrl,
         'google-auth',
@@ -85,7 +85,7 @@ export class GoogleAuthService {
         throw new Error('Impossible d\'ouvrir la popup. Vérifiez que les popups ne sont pas bloquées.');
       }
 
-      // Attendre que l'utilisateur termine l'authentification
+  // Wait for the user to complete authentication
       return new Promise((resolve, reject) => {
         const checkClosed = setInterval(() => {
           if (popup.closed) {
@@ -94,7 +94,7 @@ export class GoogleAuthService {
           }
         }, 1000);
 
-        // Écouter les messages de la popup
+  // Listen to messages from the popup
         const messageListener = (event: MessageEvent) => {
           if (event.origin !== window.location.origin) {
             return;
@@ -122,7 +122,7 @@ export class GoogleAuthService {
   }
 
   /**
-   * Redirige vers Google pour l'authentification (alternative à la popup)
+   * Redirect to Google for authentication (popup alternative)
    */
   static async redirectToGoogle(): Promise<void> {
     try {
@@ -135,7 +135,7 @@ export class GoogleAuthService {
   }
 }
 
-// Fonction utilitaire pour extraire le code de l'URL
+// Utility function to extract auth code from URL
 export function extractCodeFromUrl(url: string): string | null {
   const urlParams = new URLSearchParams(new URL(url).search);
   return urlParams.get('code');

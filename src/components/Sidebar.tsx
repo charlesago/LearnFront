@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, ChevronDown, ChevronRight, FolderOpen, BookOpen, Settings, LogOut, User, Mic, FileText } from "lucide-react";
-import { buildApiUrl, API_ENDPOINTS } from "../config/api";
+import { Menu, X, ChevronDown, ChevronRight, FolderOpen, BookOpen, Settings, LogOut, Mic } from "lucide-react";
+import { buildApiUrl } from "../config/api";
 import { useUser } from "../contexts/UserContext";
 
 const Sidebar: React.FC = () => {
-    const [isOpen, setIsOpen] = useState(true);
+    const [isOpen, setIsOpen] = useState(false); // closed on mobile by default
     const [expandedMenus, setExpandedMenus] = useState<{ [key: string]: boolean }>({});
-    const { user, folders, loading: userLoading } = useUser();
+    const { user, folders } = useUser();
 
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Déterminer le menu actif basé sur l'URL actuelle
+    // Determine active menu based on current URL
     const getActiveMenu = () => {
         const path = location.pathname;
         if (path === '/dashboard' || path === '/') return 'dashboard';
@@ -20,7 +20,7 @@ const Sidebar: React.FC = () => {
         if (path === '/folder' || path.startsWith('/folder')) return 'folders';
         if (path === '/profil' || path.startsWith('/profil')) return 'profil';
         if (path === '/settings') return 'settings';
-        if (path.startsWith('/file')) return 'folders'; // Les fichiers sont dans les dossiers
+        if (path.startsWith('/file')) return 'folders'; // Files belong under folders
         return '';
     };
 
@@ -61,7 +61,7 @@ const Sidebar: React.FC = () => {
         } else if (menu === "blog") {
             navigate("/blog", { replace: true });
         } else if (menu === "folders") {
-            // Si on est déjà sur la page des dossiers, juste toggle le menu
+            // If already on the folders page, just toggle the submenu
             if (location.pathname === "/folder" || location.pathname.startsWith("/folder/")) {
                 toggleMenu("folders");
             } else {
@@ -92,6 +92,16 @@ const Sidebar: React.FC = () => {
 
     return (
         <>
+            {/* Mobile opener (visible when sidebar is closed) */}
+            {!isOpen && (
+                <button
+                    onClick={() => setIsOpen(true)}
+                    className="fixed left-3 top-3 z-[60] p-2 rounded-lg bg-white shadow lg:hidden"
+                    aria-label="Ouvrir le menu"
+                >
+                    <Menu size={20} />
+                </button>
+            )}
             {/* Mobile backdrop */}
             {isOpen && (
                 <div 
@@ -102,14 +112,13 @@ const Sidebar: React.FC = () => {
             
             {/* Sidebar */}
             <div className={`
-                fixed left-0 top-0 h-screen bg-white shadow-xl z-50 transition-all duration-300 ease-in-out
-                ${isOpen ? 'w-72' : 'w-16'}
-                ${isOpen ? 'translate-x-0' : '-translate-x-0 lg:translate-x-0'}
+                fixed left-0 top-0 h-screen bg-white shadow-xl z-50 transition-transform duration-300 ease-in-out
+                ${isOpen ? 'translate-x-0' : '-translate-x-full'} w-72 lg:translate-x-0
                 border-r border-gray-200 flex flex-col
             `}>
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-gray-200 flex-shrink-0">
-                    <div className={`flex items-center space-x-3 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 lg:opacity-0'}`}>
+                    <div className={`flex items-center space-x-3 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 lg:opacity-100'}`}>
                         <img src="/assets/LearniaLogo.png" alt="LearnIA Logo" className="w-8 h-8 rounded-lg" />
                         <button 
                             onClick={() => navigate("/dashboard", { replace: true })}
@@ -120,7 +129,7 @@ const Sidebar: React.FC = () => {
                     </div>
                     <button
                         onClick={() => setIsOpen(!isOpen)}
-                        className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                        className="p-2 rounded-lg hover:bg-gray-100 transition-colors lg:hidden"
                     >
                         {isOpen ? <X size={20} /> : <Menu size={20} />}
                     </button>
@@ -140,7 +149,7 @@ const Sidebar: React.FC = () => {
                         `}
                     >
                         <Mic size={20} />
-                        <span className={`transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>
+                        <span className={`transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 lg:opacity-100'}`}>
                             Dashboard
                         </span>
                     </button>
@@ -157,7 +166,7 @@ const Sidebar: React.FC = () => {
                         `}
                     >
                         <BookOpen size={20} />
-                        <span className={`transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>
+                        <span className={`transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 lg:opacity-100'}`}>
                             Blog
                         </span>
                     </button>
@@ -176,7 +185,7 @@ const Sidebar: React.FC = () => {
                         >
                             <div className="flex items-center space-x-3">
                                 <FolderOpen size={20} />
-                                <span className={`transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>
+                                <span className={`transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 lg:opacity-100'}`}>
                                     Mes Dossiers
                                 </span>
                             </div>
@@ -221,7 +230,7 @@ const Sidebar: React.FC = () => {
                         `}
                     >
                         <Settings size={20} />
-                        <span className={`transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>
+                        <span className={`transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 lg:opacity-100'}`}>
                             Paramètres
                         </span>
                     </button>
@@ -244,7 +253,7 @@ const Sidebar: React.FC = () => {
                             alt="Avatar" 
                             className="w-8 h-8 rounded-full object-cover border-2 border-gray-200"
                         />
-                        <div className={`transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'} text-left flex-1`}>
+                        <div className={`transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 lg:opacity-100'} text-left flex-1`}>
                             <p className="text-sm font-medium truncate">
                                 {user ? `${user.first_name} ${user.last_name}` : 'Utilisateur'}
                             </p>
@@ -258,7 +267,7 @@ const Sidebar: React.FC = () => {
                         className="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-red-600 hover:bg-red-50 transition-all duration-200"
                     >
                         <LogOut size={20} />
-                        <span className={`transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}>
+                        <span className={`transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 lg:opacity-100'}`}>
                             Déconnexion
                         </span>
                     </button>

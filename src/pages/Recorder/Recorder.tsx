@@ -1,7 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Mic, Square, Upload, FileAudio, Loader2 } from "lucide-react";
-import Sidebar from "../../components/Sidebar";
 import { buildApiUrl, API_ENDPOINTS } from "../../config/api";
 
 const Record: React.FC = () => {
@@ -28,14 +26,14 @@ const Record: React.FC = () => {
             setLoading(false);
             
             if (data.id && data.summary) {
-                // Vérifier que nous avons bien l'ID du fichier
+                // Ensure we received the file ID
                 if (!data.file_id) {
-                    console.error("❌ Erreur: ID du fichier manquant dans la réponse");
-                    alert("Une erreur est survenue lors de la création du fichier");
+                    console.error("Error: missing file_id in response");
+                    alert("An error occurred while creating the file");
                     return;
                 }
 
-                // Rediriger vers la page d'édition du fichier
+                // Redirect to the file editor page
                 navigate(`/file/${data.file_id}/edit`, {
                     state: {
                         fileId: data.file_id,
@@ -45,8 +43,8 @@ const Record: React.FC = () => {
                     },
                 });
             } else {
-                const errorMessage = data.error || "Erreur de transcription.";
-                alert(`❌ ${errorMessage}`);
+                const errorMessage = data.error || "Transcription error.";
+                alert(errorMessage);
             }
         };
 
@@ -60,11 +58,11 @@ const Record: React.FC = () => {
 
     return (
         <div style={{ textAlign: "center", paddingTop: "100px" }}>
-            <h1>{recording ? "Enregistrement en cours..." : "Cliquez pour enregistrer"}</h1>
+            <h1>{recording ? "Recording..." : "Click to record"}</h1>
             <button onClick={recording ? stopRecording : startRecording} className="micro-button">
-                {recording ? "🛑 Stop" : "🎙️ Start"}
+                {recording ? "Stop" : "Start"}
             </button>
-            {loading && <p>Transcription en cours...</p>}
+            {loading && <p>Transcribing...</p>}
         </div>
     );
 };
@@ -75,7 +73,7 @@ const uploadAudio = async (audioBlob: Blob) => {
 
     const token = localStorage.getItem("token");
     if (!token) {
-        throw new Error("Token non trouvé");
+    throw new Error("Token not found");
     }
 
     try {
@@ -89,13 +87,13 @@ const uploadAudio = async (audioBlob: Blob) => {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.error || "Erreur lors de l'upload");
+            throw new Error(errorData.error || "Upload error");
         }
 
         const data = await response.json();
         return data;
     } catch (error) {
-        console.error("Erreur lors de l'upload :", error);
+    console.error("Upload error:", error);
         throw error;
     }
 };

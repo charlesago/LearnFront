@@ -1,13 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-    Brain, 
     CheckCircle, 
     XCircle, 
-    RotateCcw, 
-    TrendingUp, 
-    Clock,
-    Star,
     Loader2,
     ArrowLeft,
     Target
@@ -124,18 +119,18 @@ const ReviewPage: React.FC = () => {
                 },
                 body: JSON.stringify({
                     is_correct: isCorrect,
-                    difficulty_rating: 3, // Difficulté moyenne par défaut
+                    difficulty_rating: 3, // Default medium difficulty
                 }),
             });
 
-            // Passer à la carte suivante
+            // Move to the next card
             if (currentCardIndex < cards.length - 1) {
                 setCurrentCardIndex(currentCardIndex + 1);
                 setShowAnswer(false);
                 setSelectedAnswer('');
             } else {
                 setSessionComplete(true);
-                fetchReviewStats(); // Mettre à jour les stats
+                fetchReviewStats(); // Refresh stats
             }
         } catch (error) {
             console.error('Erreur lors de l\'enregistrement:', error);

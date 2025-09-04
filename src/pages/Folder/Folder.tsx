@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Folder as FolderIcon, FileText, MoreVertical, Trash2, Edit3, Loader2 } from "lucide-react";
+import { Plus, Folder as FolderIcon, FileText, MoreVertical, Trash2, Loader2 } from "lucide-react";
 import Sidebar from "../../components/Sidebar";
 import { buildApiUrl, API_ENDPOINTS } from "../../config/api";
 

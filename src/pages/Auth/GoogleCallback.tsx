@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { GoogleAuthService, extractCodeFromUrl, extractErrorFromUrl } from '../../services/googleAuth';
+import { GoogleAuthService } from '../../services/googleAuth';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 
 const GoogleCallback: React.FC = () => {
@@ -27,10 +27,10 @@ const GoogleCallback: React.FC = () => {
           return;
         }
 
-        // Traiter le code d'autorisation
+  // Handle the authorization code
         const authResponse = await GoogleAuthService.handleGoogleCallback(code);
         
-        // Sauvegarder le token
+  // Save the token
         localStorage.setItem('token', authResponse.token);
         
         setStatus('success');
@@ -40,10 +40,10 @@ const GoogleCallback: React.FC = () => {
           setMessage('✅ Connexion réussie ! Bienvenue de retour.');
         }
 
-        // Rediriger vers le dashboard après un délai
+        // Redirect to dashboard after a short delay
         setTimeout(() => {
-          // Avec Google OAuth2, on a déjà toutes les informations nécessaires
-          // Rediriger directement vers le dashboard pour tous les utilisateurs Google
+          // With Google OAuth2, we already have all the needed info
+          // Redirect directly to the dashboard for all Google users
           navigate('/dashboard', { replace: true });
         }, 2000);
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ArrowLeft, Upload, Image as ImageIcon, Send, X, Loader2, File, FileText, Download } from "lucide-react";
+import { ArrowLeft, Upload, Image as ImageIcon, Send, X, Loader2, File, FileText } from "lucide-react";
 import Sidebar from "../../components/Sidebar";
 import { buildApiUrl, API_ENDPOINTS } from "../../config/api";
 
@@ -16,7 +16,7 @@ const CreatePost: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Gérer le fichier partagé depuis FileViewer
+    // Handle shared file coming from FileViewer
     useEffect(() => {
         const sharedFile = location.state?.fileToShare;
         const sharedFileContent = location.state?.fileContent;
@@ -24,7 +24,7 @@ const CreatePost: React.FC = () => {
         if (sharedFile) {
             setFile(sharedFile);
             
-            // Pré-remplir la description avec un extrait du contenu
+            // Pre-fill description with a content preview
             const previewContent = sharedFileContent ? 
                 (sharedFileContent.length > 200 ? 
                     sharedFileContent.substring(0, 200) + '...' : 
@@ -89,7 +89,7 @@ const CreatePost: React.FC = () => {
         
         if (e.dataTransfer.files && e.dataTransfer.files[0]) {
             const droppedFile = e.dataTransfer.files[0];
-            // Accepter tous types de fichiers sauf les images (qui vont dans la section image)
+            // Accept any file type except images (they belong to the image section)
             if (!droppedFile.type.startsWith('image/')) {
                 setFile(droppedFile);
             } else {

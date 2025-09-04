@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Mic, MicOff, Folder, FileText, Loader2, Play, Square, Upload, File as FileIcon } from "lucide-react";
+import { Mic, Folder, FileText, Loader2, Play, Square, Upload, File as FileIcon } from "lucide-react";
 import { API_ENDPOINTS, buildApiUrl } from "../config/api";
 import Sidebar from "./Sidebar";
 
@@ -15,7 +15,7 @@ const Dashboard: React.FC = () => {
     const recordingInterval = useRef<number | null>(null);
     const navigate = useNavigate();
     
-    // États pour l'upload de fichiers
+    // File upload state
     const [uploadingFile, setUploadingFile] = useState(false);
     const [dragActive, setDragActive] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -101,7 +101,7 @@ const Dashboard: React.FC = () => {
                     if (response.ok && data.id && data.summary && data.file_id) {
                         setLoading(false);
                         
-                        // Rediriger vers la page d'édition du fichier avec la transcription
+                        // Redirect to the file editor with the transcription
                         navigate(`/file/${data.file_id}/edit`, {
                             state: {
                                 transcriptionId: data.id,
@@ -118,11 +118,11 @@ const Dashboard: React.FC = () => {
                     console.error("Erreur lors de l'envoi de l'audio :", error);
                     setLoading(false);
                     
-                    // Vérifier si c'est une erreur réseau
+                    // Check if this is a network error
                     if (error instanceof TypeError && error.message.includes('fetch')) {
                         alert("❌ Erreur de connexion. Vérifiez votre connexion internet.");
                     } else {
-                        // Pour toute autre erreur, afficher un message générique
+                        // For any other error, show a generic message
                         alert(`❌ Erreur inattendue : ${error instanceof Error ? error.message : 'Impossible de traiter l\'enregistrement'}`);
                     }
                 }
@@ -137,7 +137,7 @@ const Dashboard: React.FC = () => {
     const stopRecording = () => {
         setRecording(false);
         mediaRecorder.current?.stop();
-        // Arrêter le stream audio
+    // Stop the audio stream
         mediaRecorder.current?.stream.getTracks().forEach(track => track.stop());
     };
 
@@ -145,7 +145,7 @@ const Dashboard: React.FC = () => {
         const file = event.target.files?.[0];
         if (!file) return;
 
-        // Déterminer le type de fichier
+    // Determine the file type
         const fileExtension = file.name.split('.').pop()?.toLowerCase();
         let fileType = 'text';
         
@@ -185,7 +185,7 @@ const Dashboard: React.FC = () => {
             if (response.ok && data.file_id) {
                 setUploadingFile(false);
                 
-                // Rediriger vers la page d'édition du fichier
+                // Redirect to the file editor
                 navigate(`/file/${data.file_id}/edit`, {
                     state: {
                         fileId: data.file_id,
@@ -236,7 +236,7 @@ const Dashboard: React.FC = () => {
             
             {/* Main Content */}
             <div className="lg:ml-72 transition-all duration-300 ease-in-out">
-                <div className="p-6 lg:p-8">
+                <div className="p-4 sm:p-6 lg:p-8">
                     {/* Header */}
                     <div className="mb-8">
                         <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
@@ -244,7 +244,7 @@ const Dashboard: React.FC = () => {
                     </div>
 
                     {/* Recording Section */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-8">
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8 mb-8">
                         <div className="text-center">
                             {/* Status */}
                             <div className="mb-6">
@@ -311,7 +311,7 @@ const Dashboard: React.FC = () => {
                     </div>
 
                     {/* File Upload Section */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 mb-8">
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sm:p-8 mb-8">
                         <div 
                             className={`
                                 border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-300

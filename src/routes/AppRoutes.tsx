@@ -25,13 +25,13 @@ const AppRoutes: React.FC = () => {
     return (
         <Router>
             <Routes>
-                {/* Routes publiques */}
+                {/* Public routes */}
                 <Route path="/" element={<Home />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/auth/google/callback" element={<GoogleCallback />} />
 
-                {/* Routes protégées */}
+                {/* Protected routes */}
                 <Route path="/dashboard" element={
                     <ProtectedRoute>
                         <DashboardPage />

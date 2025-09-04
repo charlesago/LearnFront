@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
-import { CheckCircle, XCircle, Clock, Brain, RefreshCw, BookOpen, TrendingUp } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, RefreshCw, BookOpen, TrendingUp } from 'lucide-react';
 
 interface QuizAnswer {
     question_id: number;
@@ -34,12 +34,12 @@ const QuizResultPage: React.FC = () => {
     const [showDetails, setShowDetails] = useState(false);
 
     useEffect(() => {
-        // Récupérer les résultats depuis le state de navigation
+        // Retrieve results from navigation state
         if (location.state) {
             setResult(location.state.result);
             setReviewCardsCreated(location.state.reviewCardsCreated || 0);
         } else {
-            // Si pas de state, rediriger vers le dashboard
+            // If no state present, redirect to dashboard
             navigate('/dashboard');
         }
     }, [location.state, navigate]);
@@ -73,12 +73,12 @@ const QuizResultPage: React.FC = () => {
         return 'bg-red-50 border-red-200';
     };
 
-    const wrongAnswers = result.answers.filter(answer => !answer.is_correct);
+    
 
     return (
         <div className="min-h-screen bg-gray-50">
             <div className="max-w-4xl mx-auto py-8 px-4">
-                {/* Header - Résultat principal */}
+                {/* Header - Main result */}
                 <div className={`rounded-2xl shadow-sm border-2 p-8 mb-8 ${getScoreBgColor(result.score)}`}>
                     <div className="text-center">
                         <div className="mb-6">
@@ -157,7 +157,7 @@ const QuizResultPage: React.FC = () => {
                     </button>
                 </div>
 
-                {/* Message de motivation */}
+                {/* Motivation block */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8">
                     <div className="text-center">
                         {result.score >= 80 ? (
@@ -191,7 +191,7 @@ const QuizResultPage: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Détails des réponses */}
+                {/* Answers details */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
                     <div className="p-6 border-b border-gray-200">
                         <button

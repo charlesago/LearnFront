@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { 
     User, 
-    Mail, 
+    
     Calendar, 
     Heart, 
     MessageCircle, 
@@ -13,7 +13,7 @@ import {
     Users,
     UserPlus,
     UserMinus,
-    BookOpen
+    
 } from "lucide-react";
 import Sidebar from "../../components/Sidebar";
 import { buildApiUrl, buildMediaUrl, API_ENDPOINTS } from "../../config/api";
@@ -70,16 +70,15 @@ const OtherProfil: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<'posts' | 'about'>('posts');
     const [isFollowing, setIsFollowing] = useState(false);
-    const [followLoading, setFollowLoading] = useState(false);
+    const [followLoading] = useState(false);
     const [followStats, setFollowStats] = useState({ followers_count: 0, following_count: 0 });
-    const [newComment, setNewComment] = useState("");
 
     useEffect(() => {
         if (token && userId) {
             setLoading(true);
             setError(null);
             
-            // Récupérer le profil de l'utilisateur
+            // Fetch the user's profile
             fetch(buildApiUrl(API_ENDPOINTS.AUTH.PROFILE_BY_ID(parseInt(userId))), {
                 headers: { "Authorization": `Bearer ${token}` },
             })
@@ -100,7 +99,7 @@ const OtherProfil: React.FC = () => {
                 setError("Impossible de charger le profil utilisateur");
             });
 
-            // Récupérer le statut de suivi
+            // Fetch follow status
             fetch(buildApiUrl(API_ENDPOINTS.FOLLOW.STATUS(parseInt(userId))), {
                 headers: { "Authorization": `Bearer ${token}` },
             })
@@ -113,7 +112,7 @@ const OtherProfil: React.FC = () => {
             .then(data => setIsFollowing(data.is_following))
             .catch(err => console.error("Erreur follow status:", err));
 
-            // Récupérer les statistiques de suivi
+            // Fetch follow statistics
             fetch(buildApiUrl(API_ENDPOINTS.FOLLOW.STATS(parseInt(userId))), {
                 headers: { "Authorization": `Bearer ${token}` },
             })
@@ -126,7 +125,7 @@ const OtherProfil: React.FC = () => {
             .then(data => setFollowStats(data))
             .catch(err => console.error("Erreur follow stats:", err));
 
-            // Récupérer les posts du blog
+            // Fetch user's blog posts
             fetch(buildApiUrl(API_ENDPOINTS.BLOG.USER_POSTS(parseInt(userId))), {
                 headers: { "Authorization": `Bearer ${token}` },
             })
@@ -246,32 +245,7 @@ const OtherProfil: React.FC = () => {
         });
     };
 
-    const addComment = async (postId: number) => {
-        if (!newComment.trim()) return;
-
-        try {
-            const response = await fetch(buildApiUrl(API_ENDPOINTS.BLOG.COMMENTS(postId)), {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ content: newComment }),
-            });
-
-            if (response.ok) {
-                const newCommentData = await response.json();
-                setPosts(prev => prev.map(post =>
-                    post.id === postId
-                        ? { ...post, comments: [...(post.comments || []), newCommentData] }
-                        : post
-                ));
-                setNewComment("");
-            }
-        } catch (error) {
-            console.error("Erreur lors de l'ajout du commentaire :", error);
-        }
-    };
+    // removed unused addComment function
 
     if (loading) {
         return (
@@ -316,11 +290,11 @@ const OtherProfil: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
             <Sidebar />
             
             <div className="lg:ml-72 transition-all duration-300 ease-in-out">
-                <div className="max-w-4xl mx-auto p-6">
+                <div className="max-w-4xl mx-auto p-4 sm:p-6">
                     {/* Header avec bouton retour */}
                     <div className="mb-6">
                         <button
@@ -340,9 +314,9 @@ const OtherProfil: React.FC = () => {
                         </div>
 
                         {/* Profil Info */}
-                        <div className="relative px-8 pb-8">
+                        <div className="relative px-6 sm:px-8 pb-8">
                             {/* Avatar */}
-                            <div className="absolute -top-16 left-8">
+                            <div className="absolute -top-16 left-6 sm:left-8">
                                 <img
                                     src={user.avatar || "/assets/6421284.png"}
                                     alt="Avatar"
@@ -373,17 +347,17 @@ const OtherProfil: React.FC = () => {
                             </div>
 
                             {/* Informations utilisateur */}
-                            <div className="mt-4 ml-40">
-                                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                            <div className="mt-4 sm:ml-40">
+                                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 break-words">
                                     {user.first_name && user.last_name 
                                         ? `${user.first_name} ${user.last_name}` 
                                         : user.username
                                     }
                                 </h1>
-                                <p className="text-gray-600 text-lg mb-4">@{user.username}</p>
+                                <p className="text-gray-600 text-base sm:text-lg mb-4">@{user.username}</p>
 
                                 {/* Statistiques */}
-                                <div className="flex items-center space-x-8 mb-6">
+                                <div className="flex items-center space-x-8 mb-6 overflow-x-auto">
                                     <div className="text-center">
                                         <div className="text-2xl font-bold text-gray-900">{posts.length}</div>
                                         <div className="text-sm text-gray-600">Publications</div>
@@ -402,9 +376,9 @@ const OtherProfil: React.FC = () => {
                     </div>
 
                     {/* Tabs */}
-                    <div className="px-6">
+            <div className="px-4 sm:px-6">
                         <div className="border-b border-gray-200">
-                            <nav className="-mb-px flex space-x-8">
+                <nav className="-mb-px flex space-x-4 sm:space-x-8 overflow-x-auto">
                                 <button
                                     onClick={() => setActiveTab('posts')}
                                     className={`py-2 px-1 border-b-2 font-medium text-sm ${

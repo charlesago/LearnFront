@@ -5,23 +5,17 @@ import { useNavigate } from "react-router-dom";
 import { 
     User, 
     Mail, 
-    Calendar, 
-    MapPin, 
-    Edit3, 
     Camera, 
     Heart, 
     MessageCircle, 
-    Send, 
     Trash2, 
     Settings,
-    FileText,
     Users,
-    Award,
     Loader2,
-    Plus,
     UserPlus,
-    UserMinus,
-    Eye
+    Eye,
+    FileText,
+    UserMinus
 } from "lucide-react";
 import Sidebar from "../../components/Sidebar";
 import { API_ENDPOINTS, buildApiUrl, buildMediaUrl } from "../../config/api";
@@ -66,9 +60,7 @@ const Profil: React.FC = () => {
     const [posts, setPosts] = useState<Post[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'posts' | 'about' | 'following' | 'followers'>('posts');
-    const [commentInput, setCommentInput] = useState<{ [key: number]: string }>({});
-    const [editingComment, setEditingComment] = useState<{ [key: number]: string }>({});
-    const [loadingComments, setLoadingComments] = useState<{ [key: number]: boolean }>({});
+    
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const [following, setFollowing] = useState<FollowUser[]>([]);
     const [followers, setFollowers] = useState<FollowUser[]>([]);
@@ -113,7 +105,7 @@ const Profil: React.FC = () => {
             try {
                 console.log("📡 Tentative de récupération du profil...");
                 
-                // Récupérer le profil utilisateur
+                // Fetch user profile
                 const profileResponse = await fetch(buildApiUrl(API_ENDPOINTS.AUTH.PROFILE), {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
@@ -130,13 +122,13 @@ const Profil: React.FC = () => {
                         email: profileData.email,
                         first_name: profileData.first_name,
                         last_name: profileData.last_name,
-                        // Utiliser la fonction buildMediaUrl pour gérer les avatars
+                        // Use buildMediaUrl to resolve avatar URLs
                         avatar: profileData.avatar ? buildMediaUrl(profileData.avatar) : undefined
                     });
 
                     console.log("📡 Tentative de récupération des posts...");
                     
-                    // Récupérer les posts
+                        // Fetch posts
                     try {
                         const postsResponse = await fetch(buildApiUrl(API_ENDPOINTS.BLOG.USER_POSTS(profileData.id)), {
                             headers: { "Authorization": `Bearer ${token}` }
@@ -158,16 +150,16 @@ const Profil: React.FC = () => {
                             setPosts(formattedPosts);
                         } else {
                             console.log("⚠️ Erreur posts:", postsResponse.status);
-                            setPosts([]); // Définir un tableau vide en cas d'erreur
+                            setPosts([]); // Set empty array on error
                         }
                     } catch (postsError) {
                         console.error("❌ Erreur lors de la récupération des posts:", postsError);
-                        setPosts([]); // Définir un tableau vide en cas d'erreur
+                        setPosts([]); // Set empty array on error
                     }
 
                     console.log("📡 Tentative de récupération des abonnements...");
 
-                    // Récupérer les abonnements et abonnés
+                    // Fetch following and followers
                     try {
                         const followingResponse = await fetch(buildApiUrl(API_ENDPOINTS.USER.FOLLOWING), {
                             headers: { "Authorization": `Bearer ${token}` }
@@ -186,12 +178,12 @@ const Profil: React.FC = () => {
                             
                             setFollowing(followingData.map((user: any) => ({
                                 ...user,
-                                // Utiliser buildMediaUrl pour les avatars
+                                // Use buildMediaUrl for avatars
                                 avatar: user.avatar ? buildMediaUrl(user.avatar) : undefined
                             })));
                         } else {
                             console.log("⚠️ Erreur following:", followingResponse.status);
-                            setFollowing([]); // Définir un tableau vide en cas d'erreur
+                            setFollowing([]); // Set empty array on error
                         }
 
                         if (followersResponse.ok) {
@@ -200,12 +192,12 @@ const Profil: React.FC = () => {
                             
                             setFollowers(followersData.map((user: any) => ({
                                 ...user,
-                                // Utiliser buildMediaUrl pour les avatars
+                                // Use buildMediaUrl for avatars
                                 avatar: user.avatar ? buildMediaUrl(user.avatar) : undefined
                             })));
                         } else {
                             console.log("⚠️ Erreur followers:", followersResponse.status);
-                            setFollowers([]); // Définir un tableau vide en cas d'erreur
+                            setFollowers([]); // Set empty array on error
                         }
                     } catch (followError) {
                         console.error("❌ Erreur lors de la récupération des abonnements:", followError);
@@ -217,7 +209,7 @@ const Profil: React.FC = () => {
                     const errorData = await profileResponse.text();
                     console.log("❌ Détails erreur:", errorData);
                     
-                    // Si le token est invalide, rediriger vers login
+                    // If token is invalid, redirect to login
                     if (profileResponse.status === 401) {
                         localStorage.removeItem("token");
                         navigate("/login");
@@ -226,7 +218,7 @@ const Profil: React.FC = () => {
                 }
             } catch (error) {
                 console.error("❌ Erreur lors de la récupération des données:", error);
-                // En cas d'erreur de réseau, ne pas rediriger mais afficher une erreur
+                // On network error, don't redirect; show an error
             } finally {
                 setLoading(false);
             }
@@ -284,10 +276,10 @@ const Profil: React.FC = () => {
                 const data = await response.json();
                 
                 if (data.following) {
-                    // Utilisateur ajouté aux abonnements, le retirer de la liste
+                    // User added to following; remove from this list
                     setFollowing(prev => prev.filter(user => user.id !== userId));
                 } else {
-                    // Utilisateur retiré des abonnements
+                    // User removed from following
                     setFollowing(prev => prev.filter(user => user.id !== userId));
                 }
             }
@@ -346,7 +338,7 @@ const Profil: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
             <Sidebar />
             
             <div className="lg:ml-72 transition-all duration-300 ease-in-out">
@@ -395,7 +387,7 @@ const Profil: React.FC = () => {
                             <div className="flex-1">
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                                     <div>
-                                        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
                                             {user.first_name || user.last_name 
                                                 ? `${user.first_name || ''} ${user.last_name || ''}`.trim()
                                                 : user.username
@@ -465,9 +457,9 @@ const Profil: React.FC = () => {
                 </div>
 
                 {/* Tabs */}
-                <div className="px-6 mb-8">
+        <div className="px-4 sm:px-6 mb-8">
                     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-2">
-                        <div className="flex space-x-2">
+            <div className="flex space-x-2 overflow-x-auto flex-nowrap">
                             {[
                                 { key: 'posts', label: 'Publications', icon: FileText },
                                 { key: 'about', label: 'À propos', icon: User },
@@ -477,7 +469,7 @@ const Profil: React.FC = () => {
                                 <button
                                     key={key}
                                     onClick={() => setActiveTab(key as any)}
-                                    className={`flex items-center space-x-2 px-4 py-3 rounded-xl transition-colors flex-1 justify-center ${
+                    className={`flex items-center space-x-2 px-4 py-3 rounded-xl transition-colors flex-1 md:flex-initial justify-center shrink-0 ${
                                         activeTab === key
                                             ? 'bg-blue-600 text-white'
                                             : 'text-gray-600 hover:bg-gray-50'
@@ -498,9 +490,9 @@ const Profil: React.FC = () => {
                             {posts.length > 0 ? (
                                 posts.map((post) => (
                                     <div key={post.id} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                                        <div className="p-8">
+                                        <div className="p-6 sm:p-8">
                                             {/* Post Header */}
-                                            <div className="flex items-start justify-between mb-6">
+                                            <div className="flex items-start justify-between mb-6 flex-col sm:flex-row gap-4">
                                                 <div className="flex items-center space-x-4">
                                                     <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center overflow-hidden">
                                                         {user.avatar ? (
@@ -523,7 +515,7 @@ const Profil: React.FC = () => {
                                                 </div>
                                                 <button
                                                     onClick={() => handleDeletePost(post.id)}
-                                                    className="p-2 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors"
+                                                    className="self-start sm:self-auto p-2 text-gray-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors"
                                                 >
                                                     <Trash2 className="w-5 h-5" />
                                                 </button>

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { GoogleAuthService } from "../../services/googleAuth";
 import { Loader2 } from "lucide-react";
 import { API_ENDPOINTS, buildApiUrl } from "../../config/api";
-import "./register.css"; // Réutilisation du même style
+import "./register.css"; // Reuse the same styles
 
 const Login: React.FC = () => {
     const [email, setEmail] = useState("");

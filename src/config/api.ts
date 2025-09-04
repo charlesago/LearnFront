@@ -1,14 +1,18 @@
-// Configuration centralisée de l'API
+// Centralized API configuration
 
-// URL de base de l'API - À modifier selon l'environnement
-export const API_BASE_URL = "http://127.0.0.1:8000/api";
+// API and media base URLs (overridable via Vite env vars)
+// Define VITE_API_BASE_URL and VITE_MEDIA_BASE_URL at build time if needed
+export const API_BASE_URL =
+  (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_API_BASE_URL) ||
+  "https://back.charlesago.com/api";
 
-// URL de base pour les médias
-export const MEDIA_BASE_URL = "http://127.0.0.1:8000";
+export const MEDIA_BASE_URL =
+  (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_MEDIA_BASE_URL) ||
+  "https://back.charlesago.com/media";
 
-// Endpoints de l'API
+// API endpoints
 export const API_ENDPOINTS = {
-  // Authentification
+  // Authentication
   AUTH: {
     LOGIN: "/login/",
     REGISTER: "/register/",
@@ -19,7 +23,7 @@ export const API_ENDPOINTS = {
     CHANGE_PASSWORD: "/change-password/",
   },
   
-  // Utilisateurs et Follow System
+  // Users and follow system
   USER: {
     SEARCH: "/search/",
     PROFILE: "/profile/",
@@ -31,7 +35,7 @@ export const API_ENDPOINTS = {
     FOLLOWERS: "/followers/",
   },
 
-  // Follow System (pour compatibilité)
+  // Follow system (compat layer)
   FOLLOW: {
     STATUS: (userId: number) => `/follow/${userId}/`,
     TOGGLE: (userId: number) => `/follow/${userId}/`,
@@ -51,9 +55,10 @@ export const API_ENDPOINTS = {
     COMMENT_UPDATE: (commentId: number) => `/blog/comments/${commentId}/update/`,
     COMMENT_DELETE: (commentId: number) => `/blog/comments/${commentId}/delete/`,
     USER_COMMENTS: (userId: number) => `/blog/comments/user/${userId}/`,
+    FILE_CONTENT: "/blog/file-content/",
   },
   
-  // Dossiers et fichiers
+  // Folders and files
   FOLDERS: {
     LIST: "/folders/",
     DETAIL: (folderId: number) => `/folders/${folderId}/`,
@@ -79,7 +84,7 @@ export const API_ENDPOINTS = {
     STATISTICS: (quizId: number) => `/quiz/${quizId}/statistics/`,
   },
   
-  // Système de révision
+  // Review system
   REVIEW: {
     CARDS: "/review/cards/",
     CREATE_FROM_FILE: "/review/create-from-file/",
@@ -104,20 +109,20 @@ export const API_ENDPOINTS = {
   },
 };
 
-// Fonction utilitaire pour construire l'URL complète
+// Build full API URL
 export const buildApiUrl = (endpoint: string): string => {
   return `${API_BASE_URL}${endpoint}`;
 };
 
-// Fonction utilitaire pour construire l'URL des médias
+// Build full media URL
 export const buildMediaUrl = (mediaPath: string | null | undefined): string => {
   if (!mediaPath) return "";
   
-  // Si c'est déjà une URL complète (Google, etc.), la retourner telle quelle
+  // If it's already an absolute URL, return as is
   if (mediaPath.startsWith('http://') || mediaPath.startsWith('https://')) {
     return mediaPath;
   }
   
-  // Sinon, construire l'URL locale
+  // Otherwise, build the media URL using MEDIA_BASE_URL
   return `${MEDIA_BASE_URL}${mediaPath.startsWith('/') ? '' : '/'}${mediaPath}`;
 }; 

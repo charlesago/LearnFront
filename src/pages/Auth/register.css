@@ -140,6 +140,48 @@
     text-decoration: underline;
 }
 
+/* --- Responsive: small screens --- */
+@media (max-width: 640px) {
+    .signup-container {
+        padding: 16px;
+    }
+    .signup-box {
+        max-width: 100%;
+        padding: 20px;
+        border-radius: 10px;
+    }
+    .signup-title {
+        font-size: 22px;
+    }
+    .signup-subtitle {
+        font-size: 14px;
+    }
+    .input {
+        font-size: 15px;
+        padding: 10px;
+    }
+    .signup-button {
+        font-size: 16px;
+        padding: 12px;
+    }
+    .google-signup {
+        font-size: 15px;
+        padding: 10px;
+    }
+}
+
+@media (max-width: 380px) {
+    .signup-box {
+        padding: 16px;
+    }
+    .signup-title {
+        font-size: 20px;
+    }
+    .signup-subtitle {
+        font-size: 13px;
+    }
+}
+
 @media (min-width: 1024px) {
     .signup-box {
         max-width: 500px;

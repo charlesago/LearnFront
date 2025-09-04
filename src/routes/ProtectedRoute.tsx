@@ -1,20 +1,19 @@
 import React, { useEffect } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { useContext } from 'react';
-import { UserContext } from '../contexts/UserContext';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useUser } from '../contexts/UserContext';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-    const { user, loading } = useContext(UserContext);
+    const { user, loading } = useUser();
     const navigate = useNavigate();
     const location = useLocation();
 
     useEffect(() => {
         if (!loading && !user) {
-            // Utiliser un toast ou un message de notification
+            // Use a toast or a temporary notification message
             const notificationDiv = document.createElement('div');
             notificationDiv.style.position = 'fixed';
             notificationDiv.style.top = '10px';
@@ -29,18 +28,18 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
             
             document.body.appendChild(notificationDiv);
             
-            // Supprimer le message après 3 secondes
+            // Remove the message after 3 seconds
             const timer = setTimeout(() => {
                 document.body.removeChild(notificationDiv);
             }, 3000);
 
-            // Rediriger vers la page de login
+            // Redirect to login page
             navigate('/login', { 
                 state: { from: location },
                 replace: true 
             });
 
-            // Nettoyer
+            // Cleanup on unmount
             return () => {
                 clearTimeout(timer);
                 if (document.body.contains(notificationDiv)) {
@@ -50,7 +49,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         }
     }, [user, loading, navigate, location]);
 
-    // Afficher un loader pendant le chargement
+    // Show a loader while loading
     if (loading) {
         return (
             <div style={{
@@ -78,7 +77,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         );
     }
 
-    // Si l'utilisateur est connecté, afficher le contenu
+    // If the user is authenticated, render the content
     return user ? <>{children}</> : null;
 };
 

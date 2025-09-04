@@ -5,7 +5,6 @@ import {
     Mic, 
     FileText, 
     Brain, 
-    Play,
     Sparkles
 } from "lucide-react";
 
